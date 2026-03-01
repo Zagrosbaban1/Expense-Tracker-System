@@ -34,6 +34,9 @@ $name=$row['FullName'];
                 <em class="fa fa-navicon">&nbsp;</em>Expenses <span data-toggle="collapse" href="#sub-item-1" class="icon pull-right"><em class="fa fa-plus"></em></span>
                 </a>
                 <ul class="children collapse" id="sub-item-1">
+                    <li><a class="" href="add-item.php">
+                        <span class="fa fa-arrow-right">&nbsp;</span> Add Items
+                    </a></li>
                     <li><a class="" href="add-expense.php">
                         <span class="fa fa-arrow-right">&nbsp;</span> Add Expenses
                     </a></li>

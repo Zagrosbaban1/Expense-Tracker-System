@@ -6,6 +6,32 @@ if (strlen($_SESSION['detsuid']==0)) {
   header('location:logout.php');
   } else{
 
+$userid = $_SESSION['detsuid'];
+$itemOptions = array();
+
+mysqli_query($con, "CREATE TABLE IF NOT EXISTS tblitemmaster (
+  ID INT(11) NOT NULL AUTO_INCREMENT,
+  UserId INT(11) NOT NULL,
+  ItemName VARCHAR(255) NOT NULL,
+  CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (ID),
+  UNIQUE KEY uniq_user_item (UserId, ItemName)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+$itemQuery = mysqli_query($con, "select ItemName from tblitemmaster where UserId='$userid' order by ItemName asc");
+if ($itemQuery && mysqli_num_rows($itemQuery) > 0) {
+  while ($itemRow = mysqli_fetch_assoc($itemQuery)) {
+    $itemOptions[] = $itemRow['ItemName'];
+  }
+} else {
+  $legacyItemQuery = mysqli_query($con, "select distinct ExpenseItem from tblexpense where UserId='$userid' and ExpenseItem<>'' order by ExpenseItem asc");
+  if ($legacyItemQuery) {
+    while ($legacyItemRow = mysqli_fetch_assoc($legacyItemQuery)) {
+      $itemOptions[] = $legacyItemRow['ExpenseItem'];
+    }
+  }
+}
+
 if(isset($_POST['submit']))
   {
   	$userid=$_SESSION['detsuid'];
@@ -41,7 +67,7 @@ echo "<script>alert('Something went wrong. Please try again');</script>";
 	<script src="js/respond.min.js"></script>
 	<![endif]-->
 </head>
-<body>
+<body class="app-page">
 	<?php include_once('includes/header.php');?>
 	<?php include_once('includes/sidebar.php');?>
 		
@@ -78,7 +104,18 @@ echo "<script>alert('Something went wrong. Please try again');</script>";
 								</div>
 								<div class="form-group">
 									<label>Item</label>
-									<input type="text" class="form-control" name="item" value="" required="true">
+									<select class="form-control" name="item" required="true">
+										<option value="">Select Item</option>
+<?php
+if(!empty($itemOptions)) {
+foreach($itemOptions as $itemOption) {
+?>
+										<option value="<?php echo htmlspecialchars($itemOption); ?>"><?php echo htmlspecialchars($itemOption); ?></option>
+<?php } } ?>
+									</select>
+<?php if(empty($itemOptions)) { ?>
+									<p style="margin-top:8px; color:#777;">No items found. Please add from <a href="add-item.php">Add Items</a>.</p>
+<?php } ?>
 								</div>
 								
 								<div class="form-group">

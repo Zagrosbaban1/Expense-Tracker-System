@@ -43,7 +43,7 @@ if (strlen($_SESSION['detsuid']==0)) {
   <script src="js/respond.min.js"></script>
   <![endif]-->
 </head>
-<body>
+<body class="app-page">
   <?php include_once('includes/header.php');?>
   <?php include_once('includes/sidebar.php');?>
 
@@ -83,7 +83,9 @@ if (strlen($_SESSION['detsuid']==0)) {
                   <input class="form-control" type="text" name="costitem" value="<?php echo $row['ExpenseCost'];?>" required="true">
                 </div>
                 <div class="form-group has-success">
-                  <button type="submit" class="btn btn-primary" name="submit">Update</button>
+                  <button type="submit" class="btn btn-primary btn-modern-submit" name="submit">
+                    <em class="fa fa-save"></em> Update Expense
+                  </button>
                 </div>
               </form>
               <?php } else { ?>
@@ -109,3 +111,4 @@ if (strlen($_SESSION['detsuid']==0)) {
 </body>
 </html>
 <?php }  ?>
+

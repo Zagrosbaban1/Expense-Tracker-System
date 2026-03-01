@@ -1,7 +1,7 @@
 body {
   background: #f1f4f7;
   padding-top: 60px;
-  font-size: 14px;
+  font-size: 16px;
   color: #444444;
   font-family: "Montserrat", "Helvetica Neue", Helvetica, Arial, sans-serif; }
 
@@ -512,7 +512,7 @@ a.label:hover, a.label:focus {
 
 .panel-heading span {
   margin: 0px;
-  font-size: 14px; }
+  font-size: 16px; }
 
 .panel-button-tab-right {
   margin-left: 4px !important;
@@ -1042,11 +1042,14 @@ p.back-link {
   --ui-brand-1: #0d9dff;
   --ui-brand-2: #00c0a3;
   --ui-accent: #ff7f55;
+  --ui-danger: #d7263d;
   --ui-shadow: 0 24px 60px rgba(16, 35, 58, 0.15); }
 
 body {
   color: var(--ui-ink);
   font-family: "Montserrat", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
   background:
     radial-gradient(1200px 600px at 0% -10%, rgba(13, 157, 255, 0.24), transparent 45%),
     radial-gradient(1000px 500px at 95% 0%, rgba(0, 192, 163, 0.2), transparent 42%),
@@ -1062,6 +1065,45 @@ a, a:hover, a:focus {
 h1, h2, h3, h4, h5, h6 {
   color: var(--ui-ink);
   letter-spacing: -0.2px; }
+
+h1 { font-size: 42px; }
+h2 { font-size: 34px; }
+h3 { font-size: 28px; }
+h4 { font-size: 22px; }
+h5 { font-size: 18px; }
+h6 { font-size: 16px; }
+
+/* Consistent readable sizing across all PHP pages */
+body.app-page {
+  font-size: 17px;
+  line-height: 1.65; }
+
+body.app-page p,
+body.app-page li,
+body.app-page a,
+body.app-page td,
+body.app-page th,
+body.app-page label,
+body.app-page .form-control {
+  font-size: 16px; }
+
+body.app-page .navbar-header .navbar-brand {
+  font-size: 28px; }
+
+body.app-page .sidebar ul.nav li a {
+  font-size: 18px; }
+
+body.app-page .breadcrumb,
+body.app-page .breadcrumb li,
+body.app-page .breadcrumb .active {
+  font-size: 15px; }
+
+body.app-page .panel-heading {
+  font-size: 26px; }
+
+body.app-page .btn,
+body.app-page .action-btn {
+  font-size: 15px; }
 
 .navbar-custom {
   height: 64px;
@@ -1269,6 +1311,7 @@ h1.page-header {
 .form-control {
   border-radius: 12px;
   border-color: #ccdae9;
+  font-size: 15px;
   box-shadow: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease; }
 
@@ -1278,6 +1321,7 @@ h1.page-header {
 
 .btn {
   border-radius: 12px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.3px;
   transition: transform 0.16s ease, box-shadow 0.2s ease; }
@@ -1300,7 +1344,17 @@ h1.page-header {
 
 .btn-danger, .btn-danger:hover, .btn-danger:focus, .btn-danger:active, .btn-danger.active, .open > .dropdown-toggle.btn-danger {
   border-color: transparent;
-  background: linear-gradient(100deg, #ff7171 0%, #ff4f72 100%); }
+  color: #fff;
+  background: linear-gradient(100deg, #f24d5f 0%, var(--ui-danger) 100%); }
+
+.text-danger,
+.color-red {
+  color: var(--ui-danger) !important;
+  font-weight: 700; }
+
+.bg-danger,
+.bg-red {
+  background-color: var(--ui-danger) !important; }
 
 .table {
   border-radius: 14px;
@@ -1312,11 +1366,89 @@ h1.page-header {
   background: #f4f8fd;
   border-bottom-color: #d9e5f3;
   color: #26415e;
+  font-size: 16px;
   font-weight: 700;
   height: 52px; }
 
 .table > tbody > tr > td {
+  font-size: 15px;
   border-top-color: #e9f0f8; }
+
+.expense-actions {
+  min-width: 210px; }
+
+.action-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap; }
+
+.action-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 88px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1.25;
+  color: #fff !important;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.24s ease, filter 0.2s ease; }
+
+.action-btn:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -140%;
+  width: 120%;
+  height: 100%;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0) 5%, rgba(255, 255, 255, 0.35) 48%, rgba(255, 255, 255, 0) 95%);
+  transition: left 0.45s ease; }
+
+.action-btn:hover,
+.action-btn:focus {
+  color: #fff !important;
+  text-decoration: none;
+  transform: translateY(-2px); }
+
+.action-btn:hover:before,
+.action-btn:focus:before {
+  left: 115%; }
+
+.action-btn:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 4px rgba(13, 157, 255, 0.24); }
+
+.action-btn-edit {
+  background: linear-gradient(110deg, #1ecb7c 0%, #11a85f 100%);
+  box-shadow: 0 10px 20px rgba(17, 168, 95, 0.34); }
+
+.action-btn-delete {
+  background: linear-gradient(110deg, #ff6b6b 0%, #e53950 100%);
+  box-shadow: 0 10px 20px rgba(229, 57, 80, 0.32); }
+
+.action-btn-delete:hover,
+.action-btn-delete:focus {
+  filter: saturate(1.08); }
+
+.action-btn em {
+  font-size: 12px; }
+
+.btn-modern-submit {
+  min-width: 168px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  letter-spacing: 0.25px;
+  box-shadow: 0 12px 24px rgba(13, 157, 255, 0.34); }
+
+.btn-modern-submit em {
+  margin-right: 6px; }
 
 .fixed-table-container {
   border: 1px solid #dbe7f3;
@@ -1371,7 +1503,24 @@ h1.page-header {
 
 @media (max-width: 767px) {
   body {
-    padding-top: 64px; }
+    padding-top: 64px;
+    font-size: 15px; }
+  body.app-page {
+    font-size: 15px; }
+  body.app-page p,
+  body.app-page li,
+  body.app-page a,
+  body.app-page td,
+  body.app-page th,
+  body.app-page label,
+  body.app-page .form-control,
+  body.app-page .btn,
+  body.app-page .action-btn {
+    font-size: 16px; }
+  body.app-page .panel-heading {
+    font-size: 20px; }
+  body.app-page .sidebar ul.nav li a {
+    font-size: 16px; }
   .main {
     padding-bottom: 24px; }
   .breadcrumb {
@@ -1382,6 +1531,13 @@ h1.page-header {
     margin-bottom: 16px; }
   .panel {
     border-radius: 14px; }
+  .expense-actions {
+    min-width: 170px; }
+  .action-group {
+    gap: 6px; }
+  .action-btn {
+    min-width: 80px;
+    padding: 6px 12px; }
   .panel-body {
     padding: 16px 14px; }
   .easypiechart {

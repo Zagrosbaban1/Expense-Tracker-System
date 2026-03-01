@@ -42,7 +42,7 @@ return true;
 
 </script>
 </head>
-<body>
+<body class="app-page">
 	<div class="row">
 			<h2 align="center">Daily Expense Tracker</h2>
 	<hr />
@@ -79,3 +79,4 @@ return true;
 	<script src="js/bootstrap.min.js"></script>
 </body>
 </html>
+

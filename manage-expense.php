@@ -42,7 +42,7 @@ echo "<script>alert('Something went wrong. Please try again');</script>";
 	<script src="js/respond.min.js"></script>
 	<![endif]-->
 </head>
-<body>
+<body class="app-page">
 	<?php include_once('includes/header.php');?>
 	<?php include_once('includes/sidebar.php');?>
 		
@@ -96,7 +96,16 @@ while ($row=mysqli_fetch_array($ret)) {
                   <td><?php  echo $row['ExpenseItem'];?></td>
                   <td><?php  echo $row['ExpenseCost'];?></td>
                   <td><?php  echo $row['ExpenseDate'];?></td>
-                  <td><a href="edit-expense.php?editid=<?php echo $row['ID'];?>">Edit</a> | <a href="manage-expense.php?delid=<?php echo $row['ID'];?>" onclick="return confirm('Do you really want to delete this expense?');">Delete</a>
+                  <td class="expense-actions">
+                    <div class="action-group">
+                      <a class="btn btn-success btn-xs action-btn action-btn-edit" href="edit-expense.php?editid=<?php echo $row['ID'];?>">
+                        <em class="fa fa-pencil"></em> Edit
+                      </a>
+                      <a class="btn btn-danger btn-xs action-btn action-btn-delete" href="manage-expense.php?delid=<?php echo $row['ID'];?>" onclick="return confirm('Do you really want to delete this expense?');">
+                        <em class="fa fa-trash"></em> Delete
+                      </a>
+                    </div>
+                  </td>
                 </tr>
                 <?php 
 $cnt=$cnt+1;
@@ -125,3 +134,4 @@ $cnt=$cnt+1;
 </body>
 </html>
 <?php }  ?>
+

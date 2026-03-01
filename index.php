@@ -28,7 +28,7 @@ if(isset($_POST['login']))
 	<link href="css/styles.css" rel="stylesheet">
 	
 </head>
-<body>
+<body class="app-page">
 
 	<div class="row">
 			<h2 align="center">Daily Expense Tracker</h2>
@@ -65,3 +65,4 @@ if(isset($_POST['login']))
 	<script src="js/bootstrap.min.js"></script>
 </body>
 </html>
+

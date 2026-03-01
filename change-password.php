@@ -53,7 +53,7 @@ return true;
 
 </script>
 </head>
-<body>
+<body class="app-page">
 	<?php include_once('includes/header.php');?>
 	<?php include_once('includes/sidebar.php');?>
 		
