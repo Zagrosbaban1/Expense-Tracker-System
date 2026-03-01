@@ -9,7 +9,7 @@ if (strlen($_SESSION['detsuid']==0)) {
   {
     $userid=$_SESSION['detsuid'];
     $fullname=$_POST['fullname'];
-  $mobno=$_POST['contactnumber'];
+    $mobno=$_POST['contactnumber'];
 
      $query=mysqli_query($con, "update tbluser set FullName ='$fullname', MobileNumber='$mobno' where ID='$userid'");
     if ($query) {
@@ -75,7 +75,13 @@ $cnt=1;
 while ($row=mysqli_fetch_array($ret)) {
 
 ?>
-							<form role="form" method="post" action="">
+
+							<form role="form" method="post" action="" enctype="multipart/form-data">
+								<div class="form-group">
+								<label>Profile Photo</label>
+								<input type="file" name="profilephoto" class="form-control" accept=".jpg,.jpeg,.png,.webp">
+								</div>
+
 								<div class="form-group">
 									<label>Full Name</label>
 									<input class="form-control" type="text" value="<?php  echo $row['FullName'];?>" name="fullname" required="true">
