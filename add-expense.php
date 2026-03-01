@@ -8,6 +8,10 @@ if (strlen($_SESSION['detsuid']==0)) {
 
 $userid = $_SESSION['detsuid'];
 $itemOptions = array();
+$defaultCurrencies = array('USD', 'EUR', 'GBP', 'IQD', 'INR', 'AED', 'SAR', 'TRY');
+$currencyOptions = $defaultCurrencies;
+$selectedCurrencyValue = 'USD';
+$otherCurrencyValue = '';
 
 mysqli_query($con, "CREATE TABLE IF NOT EXISTS tblitemmaster (
   ID INT(11) NOT NULL AUTO_INCREMENT,
@@ -17,6 +21,11 @@ mysqli_query($con, "CREATE TABLE IF NOT EXISTS tblitemmaster (
   PRIMARY KEY (ID),
   UNIQUE KEY uniq_user_item (UserId, ItemName)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+$currencyColumnQuery = mysqli_query($con, "SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tblexpense' AND COLUMN_NAME = 'ExpenseCurrency' LIMIT 1");
+if ($currencyColumnQuery && mysqli_num_rows($currencyColumnQuery) == 0) {
+  mysqli_query($con, "ALTER TABLE tblexpense ADD COLUMN ExpenseCurrency VARCHAR(10) NOT NULL DEFAULT 'USD'");
+}
 
 $itemQuery = mysqli_query($con, "select ItemName from tblitemmaster where UserId='$userid' order by ItemName asc");
 if ($itemQuery && mysqli_num_rows($itemQuery) > 0) {
@@ -32,13 +41,35 @@ if ($itemQuery && mysqli_num_rows($itemQuery) > 0) {
   }
 }
 
+$currencyListQuery = mysqli_query($con, "select distinct ifnull(nullif(ExpenseCurrency,''),'USD') as Currency from tblexpense where UserId='$userid' order by Currency asc");
+if ($currencyListQuery) {
+  while ($currencyListRow = mysqli_fetch_assoc($currencyListQuery)) {
+    $currencyCode = strtoupper(trim($currencyListRow['Currency']));
+    if ($currencyCode !== '' && !in_array($currencyCode, $currencyOptions, true)) {
+      $currencyOptions[] = $currencyCode;
+    }
+  }
+}
+sort($currencyOptions);
+
 if(isset($_POST['submit']))
   {
   	$userid=$_SESSION['detsuid'];
     $dateexpense=$_POST['dateexpense'];
      $item=$_POST['item'];
      $costitem=$_POST['costitem'];
-    $query=mysqli_query($con, "insert into tblexpense(UserId,ExpenseDate,ExpenseItem,ExpenseCost) value('$userid','$dateexpense','$item','$costitem')");
+    $currency = strtoupper(trim($_POST['currency']));
+    $selectedCurrencyValue = $currency;
+    if ($currency === 'OTHER') {
+      $otherCurrencyValue = strtoupper(trim($_POST['othercurrency']));
+      $otherCurrencyValue = preg_replace('/[^A-Z]/', '', $otherCurrencyValue);
+      $currency = $otherCurrencyValue;
+    }
+    if ($currency === '' || strlen($currency) > 10) {
+      $currency = 'USD';
+      $selectedCurrencyValue = 'USD';
+    }
+    $query=mysqli_query($con, "insert into tblexpense(UserId,ExpenseDate,ExpenseItem,ExpenseCost,ExpenseCurrency) value('$userid','$dateexpense','$item','$costitem','$currency')");
 if($query){
 echo "<script>alert('Expense has been added');</script>";
 echo "<script>window.location.href='manage-expense.php'</script>";
@@ -122,6 +153,16 @@ foreach($itemOptions as $itemOption) {
 									<label>Cost of Item</label>
 									<input class="form-control" type="text" value="" required="true" name="costitem">
 								</div>
+								<div class="form-group">
+									<label>Currency</label>
+									<select class="form-control" name="currency" id="currency-select" required="true" onchange="toggleOtherCurrency(this.value)">
+<?php foreach($currencyOptions as $currencyOption) { ?>
+										<option value="<?php echo htmlspecialchars($currencyOption); ?>" <?php if($currencyOption==$selectedCurrencyValue) { echo "selected"; } ?>><?php echo htmlspecialchars($currencyOption); ?></option>
+<?php } ?>
+										<option value="OTHER" <?php if($selectedCurrencyValue=='OTHER') { echo "selected"; } ?>>Other</option>
+									</select>
+									<input class="form-control" type="text" name="othercurrency" id="other-currency" value="<?php echo htmlspecialchars($otherCurrencyValue); ?>" placeholder="Enter currency code, e.g. JPY" maxlength="10" style="margin-top:8px; display:none;">
+								</div>
 																
 								<div class="form-group has-success">
 									<button type="submit" class="btn btn-primary" name="submit">Add</button>
@@ -147,6 +188,14 @@ foreach($itemOptions as $itemOption) {
 	<script src="js/easypiechart-data.js"></script>
 	<script src="js/bootstrap-datepicker.js"></script>
 	<script src="js/custom.js"></script>
+	<script>
+		function toggleOtherCurrency(value) {
+			var otherInput = document.getElementById('other-currency');
+			if (!otherInput) return;
+			otherInput.style.display = (value === 'OTHER') ? 'block' : 'none';
+		}
+		toggleOtherCurrency(document.getElementById('currency-select').value);
+	</script>
 	
 </body>
 </html>

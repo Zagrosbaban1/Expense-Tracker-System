@@ -79,6 +79,7 @@ echo "<script>alert('Something went wrong. Please try again');</script>";
                   <th>S.NO</th>
                   <th>Expense Item</th>
                   <th>Expense Cost</th>
+                  <th>Currency</th>
                   <th>Expense Date</th>
                   <th>Action</th>
                 </tr>
@@ -95,6 +96,7 @@ while ($row=mysqli_fetch_array($ret)) {
               
                   <td><?php  echo $row['ExpenseItem'];?></td>
                   <td><?php  echo $row['ExpenseCost'];?></td>
+                  <td><?php  echo ($row['ExpenseCurrency'] ? $row['ExpenseCurrency'] : 'USD');?></td>
                   <td><?php  echo $row['ExpenseDate'];?></td>
                   <td class="expense-actions">
                     <div class="action-group">
