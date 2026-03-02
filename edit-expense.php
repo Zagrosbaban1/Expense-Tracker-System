@@ -1,45 +1,86 @@
 <?php
-session_start();
 error_reporting(0);
-include('includes/dbconnection.php');
-if (strlen($_SESSION['detsuid']==0)) {
-  header('location:logout.php');
-} else {
-  $userid=$_SESSION['detsuid'];
-  $editid=intval($_GET['editid']);
-  $defaultCurrencies = array('USD', 'EUR', 'GBP', 'IQD', 'INR', 'AED', 'SAR', 'TRY');
-  $currencyOptions = $defaultCurrencies;
+require_once 'includes/security.php';
+require_once 'includes/dbconnection.php';
+require_login();
 
-  $currencyColumnQuery = mysqli_query($con, "SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tblexpense' AND COLUMN_NAME = 'ExpenseCurrency' LIMIT 1");
-  if ($currencyColumnQuery && mysqli_num_rows($currencyColumnQuery) == 0) {
+$userid = (int)$_SESSION['detsuid'];
+$editid = (int)($_GET['editid'] ?? 0);
+$msg = '';
+
+if ($editid <= 0) {
+    header('Location: manage-expense.php');
+    exit;
+}
+
+$currencyColumnQuery = mysqli_query($con, "SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tblexpense' AND COLUMN_NAME = 'ExpenseCurrency' LIMIT 1");
+if ($currencyColumnQuery && mysqli_num_rows($currencyColumnQuery) === 0) {
     mysqli_query($con, "ALTER TABLE tblexpense ADD COLUMN ExpenseCurrency VARCHAR(10) NOT NULL DEFAULT 'USD'");
-  }
+}
 
-  if($editid==0){
-    header('location:manage-expense.php');
-    exit();
-  }
+$defaultCurrencies = ['USD', 'EUR', 'GBP', 'IQD', 'INR', 'AED', 'SAR', 'TRY'];
+$currencyOptions = $defaultCurrencies;
+$curStmt = mysqli_prepare($con, "SELECT DISTINCT IFNULL(NULLIF(ExpenseCurrency,''),'USD') AS Currency FROM tblexpense WHERE UserId = ? ORDER BY Currency ASC");
+mysqli_stmt_bind_param($curStmt, 'i', $userid);
+mysqli_stmt_execute($curStmt);
+$curRes = mysqli_stmt_get_result($curStmt);
+while ($r = mysqli_fetch_assoc($curRes)) {
+    $cc = normalize_currency($r['Currency']);
+    if (!in_array($cc, $currencyOptions, true)) {
+        $currencyOptions[] = $cc;
+    }
+}
+mysqli_stmt_close($curStmt);
+sort($currencyOptions);
 
-  if(isset($_POST['submit'])) {
-    $dateexpense=$_POST['dateexpense'];
-    $item=$_POST['item'];
-    $costitem=$_POST['costitem'];
-    $currency=strtoupper(trim($_POST['currency']));
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
+    verify_csrf_or_die();
+
+    $dateexpense = normalize_date($_POST['dateexpense'] ?? '');
+    $item = trim((string)($_POST['item'] ?? ''));
+    $costitem = (float)($_POST['costitem'] ?? 0);
+    $currency = strtoupper(trim((string)($_POST['currency'] ?? 'USD')));
+
     if ($currency === 'OTHER') {
-      $currency = strtoupper(trim($_POST['othercurrency']));
-      $currency = preg_replace('/[^A-Z]/', '', $currency);
-    }
-    if ($currency === '' || strlen($currency) > 10) {
-      $currency = 'USD';
-    }
-    $query=mysqli_query($con, "update tblexpense set ExpenseDate='$dateexpense',ExpenseItem='$item',ExpenseCost='$costitem',ExpenseCurrency='$currency' where ID='$editid' && UserId='$userid'");
-    if($query){
-      echo "<script>alert('Expense has been updated');</script>";
-      echo "<script>window.location.href='manage-expense.php'</script>";
+        $currency = normalize_currency($_POST['othercurrency'] ?? 'USD');
     } else {
-      echo "<script>alert('Something went wrong. Please try again');</script>";
+        $currency = normalize_currency($currency);
     }
-  }
+
+    if ($dateexpense === null || $item === '' || $costitem < 0) {
+        $msg = 'Please provide valid expense details.';
+    } else {
+        $up = mysqli_prepare($con, 'UPDATE tblexpense SET ExpenseDate = ?, ExpenseItem = ?, ExpenseCost = ?, ExpenseCurrency = ? WHERE ID = ? AND UserId = ?');
+        mysqli_stmt_bind_param($up, 'ssdsii', $dateexpense, $item, $costitem, $currency, $editid, $userid);
+        $ok = mysqli_stmt_execute($up);
+        mysqli_stmt_close($up);
+
+        if ($ok) {
+            header('Location: manage-expense.php');
+            exit;
+        }
+
+        $msg = 'Something went wrong. Please try again.';
+    }
+}
+
+$sel = mysqli_prepare($con, 'SELECT ExpenseDate, ExpenseItem, ExpenseCost, IFNULL(NULLIF(ExpenseCurrency,\'\'),\'USD\') AS ExpenseCurrency FROM tblexpense WHERE ID = ? AND UserId = ? LIMIT 1');
+mysqli_stmt_bind_param($sel, 'ii', $editid, $userid);
+mysqli_stmt_execute($sel);
+$res = mysqli_stmt_get_result($sel);
+$row = mysqli_fetch_assoc($res);
+mysqli_stmt_close($sel);
+
+if (!$row) {
+    header('Location: manage-expense.php');
+    exit;
+}
+
+$selectedCurrency = normalize_currency($row['ExpenseCurrency']);
+if (!in_array($selectedCurrency, $currencyOptions, true)) {
+    $currencyOptions[] = $selectedCurrency;
+    sort($currencyOptions);
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -51,113 +92,35 @@ if (strlen($_SESSION['detsuid']==0)) {
   <link href="css/font-awesome.min.css" rel="stylesheet">
   <link href="css/datepicker3.css" rel="stylesheet">
   <link href="css/styles.css" rel="stylesheet">
-
-  <link href="https://fonts.googleapis.com/css?family=Montserrat:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
-  <!--[if lt IE 9]>
-  <script src="js/html5shiv.js"></script>
-  <script src="js/respond.min.js"></script>
-  <![endif]-->
 </head>
 <body class="app-page">
-  <?php include_once('includes/header.php');?>
-  <?php include_once('includes/sidebar.php');?>
-
-  <div class="col-sm-9 col-sm-offset-3 col-lg-10 col-lg-offset-2 main">
-    <div class="row">
-      <ol class="breadcrumb">
-        <li><a href="#">
-          <em class="fa fa-home"></em>
-        </a></li>
-        <li class="active">Expense</li>
-      </ol>
-    </div>
-
-    <div class="row">
-      <div class="col-lg-12">
-        <div class="panel panel-default">
-          <div class="panel-heading">Edit Expense</div>
-          <div class="panel-body">
-            <p style="font-size:16px; color:red" align="center"> <?php if($msg){ echo $msg; }  ?> </p>
-            <div class="col-md-12">
-              <?php
-              $ret=mysqli_query($con,"select * from tblexpense where ID='$editid' && UserId='$userid'");
-              $cnt=1;
-              if($row=mysqli_fetch_array($ret)) {
-                $currencyListQuery = mysqli_query($con, "select distinct ifnull(nullif(ExpenseCurrency,''),'USD') as Currency from tblexpense where UserId='$userid' order by Currency asc");
-                if ($currencyListQuery) {
-                  while ($currencyListRow = mysqli_fetch_assoc($currencyListQuery)) {
-                    $currencyCode = strtoupper(trim($currencyListRow['Currency']));
-                    if ($currencyCode !== '' && !in_array($currencyCode, $currencyOptions, true)) {
-                      $currencyOptions[] = $currencyCode;
-                    }
-                  }
-                }
-                $selectedCurrency = $row['ExpenseCurrency'];
-                if ($selectedCurrency == "") {
-                  $selectedCurrency = "USD";
-                }
-                if (!in_array($selectedCurrency, $currencyOptions, true)) {
-                  $currencyOptions[] = $selectedCurrency;
-                }
-                sort($currencyOptions);
-              ?>
-              <form role="form" method="post" action="">
-                <div class="form-group">
-                  <label>Date of Expense</label>
-                  <input class="form-control" type="date" name="dateexpense" value="<?php echo $row['ExpenseDate'];?>" required="true">
-                </div>
-                <div class="form-group">
-                  <label>Item</label>
-                  <input type="text" class="form-control" name="item" value="<?php echo $row['ExpenseItem'];?>" required="true">
-                </div>
-                <div class="form-group">
-                  <label>Cost of Item</label>
-                  <input class="form-control" type="text" name="costitem" value="<?php echo $row['ExpenseCost'];?>" required="true">
-                </div>
-                <div class="form-group">
-                  <label>Currency</label>
-                  <select class="form-control" name="currency" id="currency-select" required="true" onchange="toggleOtherCurrency(this.value)">
-                    <?php foreach($currencyOptions as $currencyOption) { ?>
-                    <option value="<?php echo htmlspecialchars($currencyOption); ?>" <?php if($selectedCurrency == $currencyOption) { echo "selected"; } ?>><?php echo htmlspecialchars($currencyOption); ?></option>
-                    <?php } ?>
-                    <option value="OTHER">Other</option>
-                  </select>
-                  <input class="form-control" type="text" name="othercurrency" id="other-currency" placeholder="Enter currency code, e.g. JPY" maxlength="10" style="margin-top:8px; display:none;">
-                </div>
-                <div class="form-group has-success">
-                  <button type="submit" class="btn btn-primary btn-modern-submit" name="submit">
-                    <em class="fa fa-save"></em> Update Expense
-                  </button>
-                </div>
-              </form>
-              <?php } else { ?>
-                <div class="alert alert-danger">Expense not found.</div>
-              <?php } ?>
-            </div>
-          </div>
-        </div>
-      </div>
-      <?php include_once('includes/footer.php');?>
-    </div>
-  </div>
-
-  <script src="js/jquery-1.11.1.min.js"></script>
-  <script src="js/bootstrap.min.js"></script>
-  <script src="js/chart.min.js"></script>
-  <script src="js/chart-data.js"></script>
-  <script src="js/easypiechart.js"></script>
-  <script src="js/easypiechart-data.js"></script>
-  <script src="js/bootstrap-datepicker.js"></script>
-  <script src="js/custom.js"></script>
-  <script>
-    function toggleOtherCurrency(value) {
-      var otherInput = document.getElementById('other-currency');
-      if (!otherInput) return;
-      otherInput.style.display = (value === 'OTHER') ? 'block' : 'none';
-    }
-  </script>
-
+<?php include_once('includes/header.php');?>
+<?php include_once('includes/sidebar.php');?>
+<div class="col-sm-9 col-sm-offset-3 col-lg-10 col-lg-offset-2 main">
+<div class="row"><ol class="breadcrumb"><li><a href="#"><em class="fa fa-home"></em></a></li><li class="active">Expense</li></ol></div>
+<div class="row"><div class="col-lg-12"><div class="panel panel-default"><div class="panel-heading">Edit Expense</div><div class="panel-body">
+<p style="font-size:16px; color:red" align="center"><?php echo e($msg); ?></p>
+<div class="col-md-12">
+<form role="form" method="post" action="">
+<?php echo csrf_input(); ?>
+<div class="form-group"><label>Date of Expense</label><input class="form-control" type="date" name="dateexpense" value="<?php echo e($row['ExpenseDate']); ?>" required="true"></div>
+<div class="form-group"><label>Item</label><input type="text" class="form-control" name="item" value="<?php echo e($row['ExpenseItem']); ?>" required="true"></div>
+<div class="form-group"><label>Cost of Item</label><input class="form-control" type="number" step="0.01" min="0" name="costitem" value="<?php echo e($row['ExpenseCost']); ?>" required="true"></div>
+<div class="form-group"><label>Currency</label><select class="form-control" name="currency" id="currency-select" required="true" onchange="toggleOtherCurrency(this.value)"><?php foreach($currencyOptions as $currencyOption) { ?><option value="<?php echo e($currencyOption); ?>" <?php if($selectedCurrency === $currencyOption) { echo 'selected'; } ?>><?php echo e($currencyOption); ?></option><?php } ?><option value="OTHER">Other</option></select><input class="form-control" type="text" name="othercurrency" id="other-currency" placeholder="Enter currency code" maxlength="10" style="margin-top:8px; display:none;"></div>
+<div class="form-group has-success"><button type="submit" class="btn btn-primary" name="submit">Update Expense</button></div>
+</form>
+</div>
+</div></div></div></div>
+</div>
+<?php include_once('includes/footer.php');?>
+<script src="js/jquery-1.11.1.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script>
+function toggleOtherCurrency(value) {
+    var otherInput = document.getElementById('other-currency');
+    if (!otherInput) return;
+    otherInput.style.display = (value === 'OTHER') ? 'block' : 'none';
+}
+</script>
 </body>
 </html>
-<?php }  ?>
-
