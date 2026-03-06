@@ -31,7 +31,7 @@ if(isset($_POST['submit']))
 	<link href="css/styles.css" rel="stylesheet">
 	
 </head>
-<body>
+<body class="auth-page">
 	<div class="row">
 			<h2 align="center">Daily Expense Tracker</h2>
 	<hr />
@@ -51,8 +51,9 @@ if(isset($_POST['submit']))
 							<div class="form-group">
 								<input class="form-control" placeholder="Mobile Number" name="contactno" type="contactno" value="" required="true">
 							</div>
-							<div class="checkbox">
-								<button type="submit" value="" name="submit" class="btn btn-primary">Reset</button><span style="padding-left:250px"><a href="index.php" class="btn btn-primary">Login</a></span>
+							<div class="checkbox auth-actions">
+								<button type="submit" value="" name="submit" class="btn btn-primary">Reset</button>
+								<a href="index.php" class="btn btn-primary">Login</a>
 
 							</div>
 							</fieldset>

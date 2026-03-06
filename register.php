@@ -37,7 +37,7 @@ $msg="This email  associated with another account";
 	<link href="css/bootstrap.min.css" rel="stylesheet">
 	<link href="css/datepicker3.css" rel="stylesheet">
 	<link href="css/styles.css" rel="stylesheet">
-	<script type="text/javascript">
+<script type="text/javascript">
 function checkpass()
 {
 if(document.signup.password.value!=document.signup.repeatpassword.value)
@@ -50,7 +50,8 @@ return true;
 } 
 
 </script>
-<body>
+</head>
+<body class="auth-page">
 	<div class="row">
 			<h2 align="center">Daily Expense Tracker</h2>
 	<hr />
@@ -78,9 +79,9 @@ return true;
 							<div class="form-group">
 								<input type="password" class="form-control" id="repeatpassword" name="repeatpassword" placeholder="Repeat Password" required="true">
 							</div>
-							<div class="checkbox">
-								<button type="submit" value="submit" name="submit" class="btn btn-primary">Register</button><span style="padding-left:250px">
-								<a href="index.php" class="btn btn-primary">Login</a></span>
+							<div class="checkbox auth-actions">
+								<button type="submit" value="submit" name="submit" class="btn btn-primary">Register</button>
+								<a href="index.php" class="btn btn-primary">Login</a>
 							</div>
 							 </fieldset>
 					</form>

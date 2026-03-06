@@ -42,7 +42,7 @@ return true;
 
 </script>
 </head>
-<body>
+<body class="auth-page">
 	<div class="row">
 			<h2 align="center">Daily Expense Tracker</h2>
 	<hr />
@@ -62,8 +62,9 @@ return true;
 							<div class="form-group">
 								<input class="form-control" placeholder="Confirm Password" name="confirmpassword" type="password" value="" required="true">
 							</div>
-							<div class="checkbox">
-								<button type="submit" value="" name="submit" class="btn btn-primary">Reset</button><span style="padding-left:250px"><a href="index.php" class="btn btn-primary">Login</a></span>
+							<div class="checkbox auth-actions">
+								<button type="submit" value="" name="submit" class="btn btn-primary">Reset</button>
+								<a href="index.php" class="btn btn-primary">Login</a>
 
 							</div>
 						

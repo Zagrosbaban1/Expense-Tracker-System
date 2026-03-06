@@ -27,7 +27,7 @@ if (strlen($_SESSION['detsuid']==0)) {
 	<script src="js/respond.min.js"></script>
 	<![endif]-->
 </head>
-<body>
+<body class="app-page dashboard-page">
 	
 	<?php include_once('includes/header.php');?>
 	<?php include_once('includes/sidebar.php');?>
@@ -51,10 +51,10 @@ if (strlen($_SESSION['detsuid']==0)) {
 		
 		
 		
-		<div class="row">
+		<div class="row stats-row">
 			<div class="col-xs-6 col-md-3">
 				
-				<div class="panel panel-default">
+				<div class="panel panel-default stat-panel stat-panel-blue">
 					<div class="panel-body easypiechart-panel">
 <?php
 //Today Expense
@@ -65,7 +65,7 @@ $result=mysqli_fetch_array($query);
 $sum_today_expense=$result['todaysexpense'];
  ?> 
 
-						<h4>Today's Expense</h4>
+						<h4 class="stat-title">Today's Expense</h4>
 						<div class="easypiechart" id="easypiechart-blue" data-percent="<?php echo $sum_today_expense;?>" ><span class="percent"><?php if($sum_today_expense==""){
 echo "0";
 } else {
@@ -77,7 +77,7 @@ echo $sum_today_expense;
 				</div>
 			</div>
 			<div class="col-xs-6 col-md-3">
-				<div class="panel panel-default">
+				<div class="panel panel-default stat-panel stat-panel-orange">
 					<?php
 //Yestreday Expense
 $userid=$_SESSION['detsuid'];
@@ -87,7 +87,7 @@ $result1=mysqli_fetch_array($query1);
 $sum_yesterday_expense=$result1['yesterdayexpense'];
  ?> 
 					<div class="panel-body easypiechart-panel">
-						<h4>Yesterday's Expense</h4>
+						<h4 class="stat-title">Yesterday's Expense</h4>
 						<div class="easypiechart" id="easypiechart-orange" data-percent="<?php echo $sum_yesterday_expense;?>" ><span class="percent"><?php if($sum_yesterday_expense==""){
 echo "0";
 } else {
@@ -99,7 +99,7 @@ echo $sum_yesterday_expense;
 				</div>
 			</div>
 			<div class="col-xs-6 col-md-3">
-				<div class="panel panel-default">
+				<div class="panel panel-default stat-panel stat-panel-teal">
 					<?php
 //Weekly Expense
 $userid=$_SESSION['detsuid'];
@@ -110,7 +110,7 @@ $result2=mysqli_fetch_array($query2);
 $sum_weekly_expense=$result2['weeklyexpense'];
  ?>
 					<div class="panel-body easypiechart-panel">
-						<h4>Last 7day's Expense</h4>
+						<h4 class="stat-title">Last 7day's Expense</h4>
 						<div class="easypiechart" id="easypiechart-teal" data-percent="<?php echo $sum_weekly_expense;?>"><span class="percent"><?php if($sum_weekly_expense==""){
 echo "0";
 } else {
@@ -122,7 +122,7 @@ echo $sum_weekly_expense;
 				</div>
 			</div>
 			<div class="col-xs-6 col-md-3">
-				<div class="panel panel-default">
+				<div class="panel panel-default stat-panel stat-panel-red">
 					<?php
 //Monthly Expense
 $userid=$_SESSION['detsuid'];
@@ -133,7 +133,7 @@ $result3=mysqli_fetch_array($query3);
 $sum_monthly_expense=$result3['monthlyexpense'];
  ?>
 					<div class="panel-body easypiechart-panel">
-						<h4>Last 30day's Expenses</h4>
+						<h4 class="stat-title">Last 30day's Expenses</h4>
 						<div class="easypiechart" id="easypiechart-red" data-percent="<?php echo $sum_monthly_expense;?>" ><span class="percent"><?php if($sum_monthly_expense==""){
 echo "0";
 } else {
@@ -146,9 +146,9 @@ echo $sum_monthly_expense;
 			</div>
 		
 		</div><!--/.row-->
-			<div class="row">
+			<div class="row stats-row">
 			<div class="col-xs-6 col-md-3">
-				<div class="panel panel-default">
+				<div class="panel panel-default stat-panel stat-panel-violet">
 					<?php
 //Yearly Expense
 $userid=$_SESSION['detsuid'];
@@ -158,8 +158,8 @@ $result4=mysqli_fetch_array($query4);
 $sum_yearly_expense=$result4['yearlyexpense'];
  ?>
 					<div class="panel-body easypiechart-panel">
-						<h4>Current Year Expenses</h4>
-						<div class="easypiechart" id="easypiechart-red" data-percent="<?php echo $sum_yearly_expense;?>" ><span class="percent"><?php if($sum_yearly_expense==""){
+						<h4 class="stat-title">Current Year Expenses</h4>
+						<div class="easypiechart" id="easypiechart-violet" data-percent="<?php echo $sum_yearly_expense;?>" ><span class="percent"><?php if($sum_yearly_expense==""){
 echo "0";
 } else {
 echo $sum_yearly_expense;
@@ -175,7 +175,7 @@ echo $sum_yearly_expense;
 			</div>
 
 		<div class="col-xs-6 col-md-3">
-				<div class="panel panel-default">
+				<div class="panel panel-default stat-panel stat-panel-cyan">
 					<?php
 //Yearly Expense
 $userid=$_SESSION['detsuid'];
@@ -184,8 +184,8 @@ $result5=mysqli_fetch_array($query5);
 $sum_total_expense=$result5['totalexpense'];
  ?>
 					<div class="panel-body easypiechart-panel">
-						<h4>Total Expenses</h4>
-						<div class="easypiechart" id="easypiechart-red" data-percent="<?php echo $sum_total_expense;?>" ><span class="percent"><?php if($sum_total_expense==""){
+						<h4 class="stat-title">Total Expenses</h4>
+						<div class="easypiechart" id="easypiechart-cyan" data-percent="<?php echo $sum_total_expense;?>" ><span class="percent"><?php if($sum_total_expense==""){
 echo "0";
 } else {
 echo $sum_total_expense;

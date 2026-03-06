@@ -28,7 +28,7 @@ if(isset($_POST['login']))
 	<link href="css/styles.css" rel="stylesheet">
 	
 </head>
-<body>
+<body class="auth-page">
 
 	<div class="row">
 			<h2 align="center">Daily Expense Tracker</h2>
@@ -49,9 +49,9 @@ if(isset($_POST['login']))
 							<div class="form-group">
 								<input class="form-control" placeholder="Password" name="password" type="password" value="" required="true">
 							</div>
-							<div class="checkbox">
-								<button type="submit" value="login" name="login" class="btn btn-primary">login</button><span style="padding-left:250px">
-								<a href="register.php" class="btn btn-primary">Register</a></span>
+							<div class="checkbox auth-actions">
+								<button type="submit" value="login" name="login" class="btn btn-primary">Login</button>
+								<a href="register.php" class="btn btn-primary">Register</a>
 							</div>
 							</fieldset>
 					</form>
