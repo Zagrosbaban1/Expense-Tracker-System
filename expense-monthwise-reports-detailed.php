@@ -5,6 +5,11 @@ include('includes/dbconnection.php');
 if (strlen($_SESSION['detsuid']==0)) {
   header('location:logout.php');
   } else{
+if(!function_exists('usd_after')){
+  function usd_after($amount){
+    return number_format((float)$amount, 2).' $';
+  }
+}
 
   
 
@@ -53,49 +58,101 @@ if (strlen($_SESSION['detsuid']==0)) {
 						<div class="col-md-12">
 					
 <?php
-$fdate=$_POST['fromdate'];
- $tdate=$_POST['todate'];
-$rtype=$_POST['requesttype'];
+$fdate = $_POST['fromdate'];
+$tdate = $_POST['todate'];
+$labels = array();
+$values = array();
+$rows = array();
+$totalsexp = 0;
+$cnt = 1;
+$userid = $_SESSION['detsuid'];
+
+$ret = mysqli_query($con, "SELECT month(ExpenseDate) as rptmonth,year(ExpenseDate) as rptyear,SUM(ExpenseCost) as totalmonth FROM tblexpense where (ExpenseDate BETWEEN '$fdate' and '$tdate') && (UserId='$userid') group by month(ExpenseDate),year(ExpenseDate) order by year(ExpenseDate),month(ExpenseDate)");
+while ($row = mysqli_fetch_array($ret)) {
+  $rows[] = $row;
+  $labels[] = $row['rptmonth'] . "-" . $row['rptyear'];
+  $values[] = (float)$row['totalmonth'];
+  $totalsexp += (float)$row['totalmonth'];
+}
+$recordCount = count($rows);
 ?>
-<h5 align="center" style="color:blue">Monthwise Expense Report from <?php echo $fdate?> to <?php echo $tdate?></h5>
-<hr />
-                                    <table id="datatable" class="table table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
-                                        <thead>
-                                        <tr>
-                                            <tr>
-              <th>S.NO</th>
-              <th>Month-Year</th>
-              <th>Expense Amount</th>
-                </tr>
-                                        </tr>
-                                        </thead>
- <?php
-$userid=$_SESSION['detsuid'];
-$ret=mysqli_query($con,"SELECT month(ExpenseDate) as rptmonth,year(ExpenseDate) as rptyear,SUM(ExpenseCost) as totalmonth FROM tblexpense  where (ExpenseDate BETWEEN '$fdate' and '$tdate') && (UserId='$userid') group by month(ExpenseDate),year(ExpenseDate)");
-$cnt=1;
-while ($row=mysqli_fetch_array($ret)) {
+<div class="report-header">
+  <h4 class="color-blue">Monthwise Expense Report</h4>
+  <p>From <strong><?php echo $fdate; ?></strong> to <strong><?php echo $tdate; ?></strong></p>
+</div>
 
-?>
-              
-                <tr>
-                  <td><?php echo $cnt;?></td>
-            
-                  <td><?php  echo $row['rptmonth']."-".$row['rptyear'];?></td>
-                  <td><?php  echo $ttlsl=$row['totalmonth'];?></td>
-           
-           
-                </tr>
-                <?php
-                $totalsexp+=$ttlsl; 
-$cnt=$cnt+1;
-}?>
+<div class="row report-metrics">
+  <div class="col-sm-4">
+    <div class="panel panel-default metric-card">
+      <div class="panel-body">
+        <p>Total Expense</p>
+        <h3><?php echo usd_after($totalsexp); ?></h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="panel panel-default metric-card">
+      <div class="panel-body">
+        <p>Months Count</p>
+        <h3><?php echo $recordCount; ?></h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="panel panel-default metric-card">
+      <div class="panel-body">
+        <p>Average / Month</p>
+        <h3><?php echo $recordCount > 0 ? usd_after($totalsexp / $recordCount) : usd_after(0); ?></h3>
+      </div>
+    </div>
+  </div>
+</div>
 
- <tr>
-  <th colspan="2" style="text-align:center">Grand Total</th>     
-  <td><?php echo $totalsexp;?></td>
- </tr>     
+<?php if ($recordCount > 0) { ?>
+<div class="row">
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">Expense Trend (Line)</div>
+      <div class="panel-body">
+        <canvas id="monthLineChart" height="140"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">Expense Comparison (Bar)</div>
+      <div class="panel-body">
+        <canvas id="monthBarChart" height="140"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+<?php } ?>
 
-                                    </table>
+<div class="table-responsive">
+  <table id="datatable" class="table table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
+    <thead>
+      <tr>
+        <th>S.NO</th>
+        <th>Month-Year</th>
+        <th>Expense Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php foreach ($rows as $row) { ?>
+      <tr>
+        <td><?php echo $cnt; ?></td>
+        <td><?php echo $row['rptmonth'] . "-" . $row['rptyear']; ?></td>
+        <td><?php echo usd_after($row['totalmonth']); ?></td>
+      </tr>
+      <?php $cnt = $cnt + 1; } ?>
+      <tr>
+        <th colspan="2" style="text-align:center">Grand Total</th>
+        <td><?php echo usd_after($totalsexp); ?></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
 
 
@@ -116,6 +173,60 @@ $cnt=$cnt+1;
 	<script src="js/easypiechart-data.js"></script>
 	<script src="js/bootstrap-datepicker.js"></script>
 	<script src="js/custom.js"></script>
+	<script>
+		(function() {
+			var labels = <?php echo json_encode($labels); ?>;
+			var values = <?php echo json_encode($values); ?>;
+			if (!labels.length) return;
+
+			var lineData = {
+				labels: labels,
+				datasets: [{
+					fillColor: "rgba(13,143,255,0.18)",
+					strokeColor: "rgba(13,143,255,1)",
+					pointColor: "rgba(13,143,255,1)",
+					pointStrokeColor: "#fff",
+					data: values
+				}]
+			};
+
+			var barData = {
+				labels: labels,
+				datasets: [{
+					fillColor: "rgba(124,92,255,0.75)",
+					strokeColor: "rgba(124,92,255,1)",
+					highlightFill: "rgba(124,92,255,1)",
+					highlightStroke: "rgba(124,92,255,1)",
+					data: values
+				}]
+			};
+
+			var lineCtx = document.getElementById("monthLineChart");
+			var barCtx = document.getElementById("monthBarChart");
+			if (lineCtx) {
+				new Chart(lineCtx.getContext("2d")).Line(lineData, { responsive: true, bezierCurve: false });
+			}
+			if (barCtx) {
+				new Chart(barCtx.getContext("2d")).Bar(barData, {
+					responsive: true,
+					barShowStroke: false,
+					animation: true,
+					animationSteps: 60,
+					animationEasing: "easeOutQuart",
+					onAnimationComplete: function () {
+						var ctx = this.chart.ctx;
+						ctx.font = "12px Arial";
+						ctx.fillStyle = "#1b2b43";
+						ctx.textAlign = "center";
+						ctx.textBaseline = "bottom";
+						this.datasets[0].bars.forEach(function (bar) {
+							ctx.fillText(bar.value.toFixed(2) + " $", bar.x, bar.y - 4);
+						});
+					}
+				});
+			}
+		})();
+	</script>
 	
 </body>
 </html>

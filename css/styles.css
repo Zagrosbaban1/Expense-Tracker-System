@@ -521,6 +521,45 @@ fieldset[disabled] .btn-primary.active {
   border-radius: var(--radius-md);
 }
 
+.report-header {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  background: #f5f9ff;
+  border: 1px solid #e5eefc;
+  border-radius: var(--radius-md);
+}
+
+.report-header h4 {
+  margin: 0 0 4px;
+}
+
+.report-header p {
+  margin: 0;
+  color: var(--text-1);
+}
+
+.report-metrics .metric-card {
+  margin-bottom: 14px;
+}
+
+.metric-card .panel-body {
+  padding: 14px 16px;
+}
+
+.metric-card p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.metric-card h3 {
+  margin: 6px 0 0;
+  font-size: 24px;
+}
+
 .easypiechart-panel {
   text-align: center;
   padding: 8px 8px 14px;
@@ -539,6 +578,7 @@ fieldset[disabled] .btn-primary.active {
 
 .dashboard-page .stat-panel {
   position: relative;
+  height: 100%;
   transition: transform 0.2s ease, box-shadow 0.25s ease;
 }
 
@@ -560,6 +600,38 @@ fieldset[disabled] .btn-primary.active {
   font-size: 12px;
   color: var(--text-2);
   margin-bottom: 12px;
+}
+
+.dashboard-page .stat-number {
+  font-size: 42px;
+  line-height: 1.1;
+  font-weight: 700;
+  color: var(--text-0);
+  padding: 16px 8px 8px;
+}
+
+.dashboard-page .stat-panel-blue .stat-number {
+  color: #0d8fff;
+}
+
+.dashboard-page .stat-panel-orange .stat-number {
+  color: #f29d38;
+}
+
+.dashboard-page .stat-panel-teal .stat-number {
+  color: #1fb981;
+}
+
+.dashboard-page .stat-panel-red .stat-number {
+  color: #ef4b5f;
+}
+
+.dashboard-page .stat-panel-violet .stat-number {
+  color: #7c5cff;
+}
+
+.dashboard-page .stat-panel-cyan .stat-number {
+  color: #11a9c9;
 }
 
 .dashboard-page .stat-panel-blue::before {
@@ -584,6 +656,84 @@ fieldset[disabled] .btn-primary.active {
 
 .dashboard-page .stat-panel-cyan::before {
   background: linear-gradient(100deg, #25c6e8 0%, #0d98b6 100%);
+}
+
+.dashboard-page .analytics-row {
+  margin-top: 6px;
+}
+
+.dashboard-page .analytics-panel .panel-heading {
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dashboard-page .analytics-panel .panel-body {
+  padding: 14px 16px 16px;
+}
+
+.dashboard-page .analytics-filter {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.dashboard-page .analytics-filter label {
+  display: block;
+  margin: 0 0 4px;
+  font-size: 12px;
+}
+
+.dashboard-page .analytics-filter .form-control {
+  height: 36px;
+}
+
+.dashboard-page .analytics-panel {
+  overflow: visible;
+}
+
+.dashboard-page .analytics-chart-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 8px 10px 0;
+}
+
+.dashboard-page .analytics-chart-wrap canvas {
+  display: block;
+}
+
+.dashboard-page .analytics-chart-wrap .trend-chart {
+  min-width: 640px;
+}
+
+.dashboard-page .analytics-chart-wrap .category-chart {
+  min-width: 380px;
+}
+
+.dashboard-page .insight-card {
+  margin-bottom: 14px;
+}
+
+.dashboard-page .insight-card .panel-body {
+  padding: 14px 16px;
+}
+
+.dashboard-page .insight-label {
+  margin: 0 0 6px;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dashboard-page .insight-value {
+  margin: 0 0 8px;
+  font-size: 26px;
+  line-height: 1.1;
 }
 
 .easypiechart {
@@ -718,6 +868,16 @@ p.back-link {
 
   .sidebar {
     box-shadow: none;
+  }
+
+  .dashboard-page .analytics-chart-wrap .trend-chart,
+  .dashboard-page .analytics-chart-wrap .category-chart {
+    min-width: 0;
+    width: 100% !important;
+  }
+
+  .dashboard-page .analytics-filter {
+    align-items: stretch;
   }
 }
 

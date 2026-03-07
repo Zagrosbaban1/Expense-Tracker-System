@@ -5,6 +5,11 @@ include('includes/dbconnection.php');
 if (strlen($_SESSION['detsuid']==0)) {
   header('location:logout.php');
   } else{
+if(!function_exists('usd_after')){
+function usd_after($amount){
+return number_format((float)$amount,2).' $';
+}
+}
 
 //code deletion
 if(isset($_GET['delid']))
@@ -94,7 +99,7 @@ while ($row=mysqli_fetch_array($ret)) {
                   <td><?php echo $cnt;?></td>
               
                   <td><?php  echo $row['ExpenseItem'];?></td>
-                  <td><?php  echo $row['ExpenseCost'];?></td>
+                  <td><?php  echo usd_after($row['ExpenseCost']);?></td>
                   <td><?php  echo $row['ExpenseDate'];?></td>
                   <td>
                     <a class="btn btn-xs btn-primary" href="edit-expense.php?editid=<?php echo $row['ID'];?>"><em class="fa fa-pencil"></em> Edit</a>
