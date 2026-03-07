@@ -5,69 +5,93 @@ include('includes/dbconnection.php');
 if (strlen($_SESSION['detsuid']==0)) {
   header('location:logout.php');
   } else{
-if(!function_exists('usd_after')){
-  function usd_after($amount){
-    return number_format((float)$amount, 2).' $';
+if(!function_exists('currency_symbol')){
+  function currency_symbol($currency){
+    $symbols=array(
+      'USD'=>'$',
+      'EUR'=>'€',
+      'IQD'=>'IQD',
+      'GBP'=>'£',
+      'AED'=>'AED',
+      'SAR'=>'SAR'
+    );
+    return isset($symbols[$currency]) ? $symbols[$currency] : $currency;
+  }
+}
+if(!function_exists('money_after')){
+  function money_after($amount,$currency){
+    return number_format((float)$amount, 2).' '.currency_symbol($currency);
   }
 }
 $userid=$_SESSION['detsuid'];
+$currencyOptions=array('USD','EUR','IQD','GBP','AED','SAR');
+$selectedCurrency=isset($_GET['cur']) ? strtoupper($_GET['cur']) : 'USD';
+if(!in_array($selectedCurrency,$currencyOptions)){
+  $selectedCurrency='USD';
+}
+
+$currencyColumn=mysqli_query($con,"SHOW COLUMNS FROM tblexpense LIKE 'Currency'");
+if(mysqli_num_rows($currencyColumn)==0){
+  mysqli_query($con,"ALTER TABLE tblexpense ADD COLUMN Currency varchar(10) NOT NULL DEFAULT 'USD' AFTER ExpenseCost");
+}
 
 // Today Expense
 $tdate=date('Y-m-d');
-$query=mysqli_query($con,"select sum(ExpenseCost) as todaysexpense from tblexpense where (ExpenseDate)='$tdate' && (UserId='$userid');");
+$query=mysqli_query($con,"select sum(ExpenseCost) as todaysexpense from tblexpense where (ExpenseDate)='$tdate' && (UserId='$userid') && (Currency='$selectedCurrency');");
 $result=mysqli_fetch_array($query);
 $sum_today_expense=$result['todaysexpense'];
 
 // Yesterday Expense
 $ydate=date('Y-m-d',strtotime("-1 days"));
-$query1=mysqli_query($con,"select sum(ExpenseCost) as yesterdayexpense from tblexpense where (ExpenseDate)='$ydate' && (UserId='$userid');");
+$query1=mysqli_query($con,"select sum(ExpenseCost) as yesterdayexpense from tblexpense where (ExpenseDate)='$ydate' && (UserId='$userid') && (Currency='$selectedCurrency');");
 $result1=mysqli_fetch_array($query1);
 $sum_yesterday_expense=$result1['yesterdayexpense'];
 
 // Weekly Expense
 $pastdate=date("Y-m-d", strtotime("-1 week"));
 $crrntdte=date("Y-m-d");
-$query2=mysqli_query($con,"select sum(ExpenseCost) as weeklyexpense from tblexpense where ((ExpenseDate) between '$pastdate' and '$crrntdte') && (UserId='$userid');");
+$query2=mysqli_query($con,"select sum(ExpenseCost) as weeklyexpense from tblexpense where ((ExpenseDate) between '$pastdate' and '$crrntdte') && (UserId='$userid') && (Currency='$selectedCurrency');");
 $result2=mysqli_fetch_array($query2);
 $sum_weekly_expense=$result2['weeklyexpense'];
 
 // Monthly Expense
 $monthdate=date("Y-m-d", strtotime("-1 month"));
-$query3=mysqli_query($con,"select sum(ExpenseCost) as monthlyexpense from tblexpense where ((ExpenseDate) between '$monthdate' and '$crrntdte') && (UserId='$userid');");
+$query3=mysqli_query($con,"select sum(ExpenseCost) as monthlyexpense from tblexpense where ((ExpenseDate) between '$monthdate' and '$crrntdte') && (UserId='$userid') && (Currency='$selectedCurrency');");
 $result3=mysqli_fetch_array($query3);
 $sum_monthly_expense=$result3['monthlyexpense'];
 
 // Yearly Expense
 $cyear=date("Y");
-$query4=mysqli_query($con,"select sum(ExpenseCost) as yearlyexpense from tblexpense where (year(ExpenseDate)='$cyear') && (UserId='$userid');");
+$query4=mysqli_query($con,"select sum(ExpenseCost) as yearlyexpense from tblexpense where (year(ExpenseDate)='$cyear') && (UserId='$userid') && (Currency='$selectedCurrency');");
 $result4=mysqli_fetch_array($query4);
 $sum_yearly_expense=$result4['yearlyexpense'];
 
 // Total Expense
-$query5=mysqli_query($con,"select sum(ExpenseCost) as totalexpense from tblexpense where UserId='$userid';");
+$query5=mysqli_query($con,"select sum(ExpenseCost) as totalexpense from tblexpense where UserId='$userid' && Currency='$selectedCurrency';");
 $result5=mysqli_fetch_array($query5);
 $sum_total_expense=$result5['totalexpense'];
 
-// Dashboard analytics: day-by-day for selected month/year
-$selectedMonth=isset($_GET['m']) ? intval($_GET['m']) : intval(date('n'));
-$selectedYear=isset($_GET['y']) ? intval($_GET['y']) : intval(date('Y'));
-if($selectedMonth < 1 || $selectedMonth > 12){
-  $selectedMonth=intval(date('n'));
+// Totals by currency
+$currencyTotals=array();
+foreach($currencyOptions as $cur){
+  $currencyTotals[$cur]=0;
 }
-if($selectedYear < 2000 || $selectedYear > 2100){
-  $selectedYear=intval(date('Y'));
+$currencyTotalsQuery=mysqli_query($con,"SELECT Currency, SUM(ExpenseCost) as total FROM tblexpense WHERE UserId='$userid' GROUP BY Currency");
+while($crow=mysqli_fetch_array($currencyTotalsQuery)){
+  $curCode=strtoupper(trim($crow['Currency']));
+  $curTotal=(float)$crow['total'];
+  $currencyTotals[$curCode]=$curTotal;
 }
-$selectedPeriodStart=sprintf('%04d-%02d-01',$selectedYear,$selectedMonth);
+
+// Dashboard analytics: current month only
+$selectedPeriodStart=date('Y-m-01');
 $selectedPeriodEnd=date('Y-m-t',strtotime($selectedPeriodStart));
 $selectedMonthLabel=date('F Y',strtotime($selectedPeriodStart));
-$currentMonthStart=date('Y-m-01');
-$currentMonthEnd=date('Y-m-t');
-$currentMonthLabel=date('F Y');
 
 $dayMap=array();
 $dayLabels=array();
 $dayValues=array();
-$dayQuery=mysqli_query($con,"SELECT DAY(ExpenseDate) as d, SUM(ExpenseCost) as total FROM tblexpense WHERE UserId='$userid' AND ExpenseDate BETWEEN '$selectedPeriodStart' AND '$selectedPeriodEnd' GROUP BY DAY(ExpenseDate) ORDER BY DAY(ExpenseDate) ASC");
+$dayQuery=mysqli_query($con,"SELECT DAY(ExpenseDate) as d, SUM(ExpenseCost) as total FROM tblexpense WHERE UserId='$userid' AND Currency='$selectedCurrency' AND ExpenseDate BETWEEN '$selectedPeriodStart' AND '$selectedPeriodEnd' GROUP BY DAY(ExpenseDate) ORDER BY DAY(ExpenseDate) ASC");
 while($drow=mysqli_fetch_array($dayQuery)){
   $dayMap[(int)$drow['d']]=(float)$drow['total'];
 }
@@ -79,36 +103,23 @@ for($d=1;$d<=$daysInSelectedMonth;$d++){
 
 $topItemLabels=array();
 $topItemValues=array();
-$topItemsQuery=mysqli_query($con,"SELECT ExpenseItem, SUM(ExpenseCost) as total FROM tblexpense WHERE UserId='$userid' AND ExpenseDate BETWEEN '$currentMonthStart' AND '$currentMonthEnd' GROUP BY ExpenseItem ORDER BY total DESC LIMIT 5");
+$topItemsQuery=mysqli_query($con,"SELECT ExpenseItem, SUM(ExpenseCost) as total FROM tblexpense WHERE UserId='$userid' AND Currency='$selectedCurrency' AND ExpenseDate BETWEEN '$selectedPeriodStart' AND '$selectedPeriodEnd' GROUP BY ExpenseItem ORDER BY total DESC LIMIT 5");
 while($irow=mysqli_fetch_array($topItemsQuery)){
   $topItemLabels[]=$irow['ExpenseItem'];
   $topItemValues[]=(float)$irow['total'];
 }
 
-$yearOptions=array();
-$yearQuery=mysqli_query($con,"SELECT DISTINCT YEAR(ExpenseDate) as yr FROM tblexpense WHERE UserId='$userid' ORDER BY yr DESC");
-while($yrow=mysqli_fetch_array($yearQuery)){
-  $yearOptions[]=(int)$yrow['yr'];
-}
-if(count($yearOptions)==0){
-  $yearOptions[]=intval(date('Y'));
-}
-if(!in_array($selectedYear,$yearOptions)){
-  $yearOptions[]=$selectedYear;
-  rsort($yearOptions);
-}
-
-$activeDaysQuery=mysqli_query($con,"SELECT COUNT(DISTINCT ExpenseDate) as activeDays FROM tblexpense WHERE UserId='$userid' AND ExpenseDate BETWEEN '$selectedPeriodStart' AND '$selectedPeriodEnd'");
+$activeDaysQuery=mysqli_query($con,"SELECT COUNT(DISTINCT ExpenseDate) as activeDays FROM tblexpense WHERE UserId='$userid' AND Currency='$selectedCurrency' AND ExpenseDate BETWEEN '$selectedPeriodStart' AND '$selectedPeriodEnd'");
 $activeDaysResult=mysqli_fetch_array($activeDaysQuery);
 $activeDays=(int)$activeDaysResult['activeDays'];
 $selectedMonthTotal=array_sum($dayValues);
 $avgPerActiveDay=$activeDays>0 ? ($selectedMonthTotal/$activeDays) : 0;
 
-$maxSingleQuery=mysqli_query($con,"SELECT MAX(ExpenseCost) as maxsingle FROM tblexpense WHERE UserId='$userid'");
+$maxSingleQuery=mysqli_query($con,"SELECT MAX(ExpenseCost) as maxsingle FROM tblexpense WHERE UserId='$userid' AND Currency='$selectedCurrency'");
 $maxSingleResult=mysqli_fetch_array($maxSingleQuery);
 $maxSingleExpense=(float)$maxSingleResult['maxsingle'];
 
-$latestQuery=mysqli_query($con,"SELECT ExpenseItem,ExpenseCost,ExpenseDate FROM tblexpense WHERE UserId='$userid' ORDER BY ExpenseDate DESC, ID DESC LIMIT 1");
+$latestQuery=mysqli_query($con,"SELECT ExpenseItem,ExpenseCost,ExpenseDate FROM tblexpense WHERE UserId='$userid' AND Currency='$selectedCurrency' ORDER BY ExpenseDate DESC, ID DESC LIMIT 1");
 $latestResult=mysqli_fetch_array($latestQuery);
 $latestItem=$latestResult['ExpenseItem'];
 $latestCost=$latestResult['ExpenseCost'];
@@ -163,7 +174,7 @@ $latestDate=$latestResult['ExpenseDate'];
 				<div class="panel panel-default stat-panel stat-panel-blue">
 					<div class="panel-body easypiechart-panel">
 						<h4 class="stat-title">Today's Expense</h4>
-						<div class="stat-number"><?php if($sum_today_expense==""){ echo usd_after(0); } else { echo usd_after($sum_today_expense); } ?></div>
+						<div class="stat-number"><?php if($sum_today_expense==""){ echo money_after(0,$selectedCurrency); } else { echo money_after($sum_today_expense,$selectedCurrency); } ?></div>
 					</div>
 				</div>
 			</div>
@@ -171,7 +182,7 @@ $latestDate=$latestResult['ExpenseDate'];
 				<div class="panel panel-default stat-panel stat-panel-orange">
 					<div class="panel-body easypiechart-panel">
 						<h4 class="stat-title">Yesterday's Expense</h4>
-						<div class="stat-number"><?php if($sum_yesterday_expense==""){ echo usd_after(0); } else { echo usd_after($sum_yesterday_expense); } ?></div>
+						<div class="stat-number"><?php if($sum_yesterday_expense==""){ echo money_after(0,$selectedCurrency); } else { echo money_after($sum_yesterday_expense,$selectedCurrency); } ?></div>
 					</div>
 				</div>
 			</div>
@@ -179,7 +190,7 @@ $latestDate=$latestResult['ExpenseDate'];
 				<div class="panel panel-default stat-panel stat-panel-teal">
 					<div class="panel-body easypiechart-panel">
 						<h4 class="stat-title">Last 7day's Expense</h4>
-						<div class="stat-number"><?php if($sum_weekly_expense==""){ echo usd_after(0); } else { echo usd_after($sum_weekly_expense); } ?></div>
+						<div class="stat-number"><?php if($sum_weekly_expense==""){ echo money_after(0,$selectedCurrency); } else { echo money_after($sum_weekly_expense,$selectedCurrency); } ?></div>
 					</div>
 				</div>
 			</div>
@@ -187,7 +198,7 @@ $latestDate=$latestResult['ExpenseDate'];
 				<div class="panel panel-default stat-panel stat-panel-red">
 					<div class="panel-body easypiechart-panel">
 						<h4 class="stat-title">Last 30day's Expenses</h4>
-						<div class="stat-number"><?php if($sum_monthly_expense==""){ echo usd_after(0); } else { echo usd_after($sum_monthly_expense); } ?></div>
+						<div class="stat-number"><?php if($sum_monthly_expense==""){ echo money_after(0,$selectedCurrency); } else { echo money_after($sum_monthly_expense,$selectedCurrency); } ?></div>
 					</div>
 				</div>
 			</div>
@@ -195,7 +206,7 @@ $latestDate=$latestResult['ExpenseDate'];
 				<div class="panel panel-default stat-panel stat-panel-violet">
 					<div class="panel-body easypiechart-panel">
 						<h4 class="stat-title">Current Year Expenses</h4>
-						<div class="stat-number"><?php if($sum_yearly_expense==""){ echo usd_after(0); } else { echo usd_after($sum_yearly_expense); } ?></div>
+						<div class="stat-number"><?php if($sum_yearly_expense==""){ echo money_after(0,$selectedCurrency); } else { echo money_after($sum_yearly_expense,$selectedCurrency); } ?></div>
 
 
 					</div>
@@ -207,7 +218,7 @@ $latestDate=$latestResult['ExpenseDate'];
 				<div class="panel panel-default stat-panel stat-panel-cyan">
 					<div class="panel-body easypiechart-panel">
 						<h4 class="stat-title">Total Expenses</h4>
-						<div class="stat-number"><?php if($sum_total_expense==""){ echo usd_after(0); } else { echo usd_after($sum_total_expense); } ?></div>
+						<div class="stat-number"><?php if($sum_total_expense==""){ echo money_after(0,$selectedCurrency); } else { echo money_after($sum_total_expense,$selectedCurrency); } ?></div>
 
 
 					</div>
@@ -222,24 +233,14 @@ $latestDate=$latestResult['ExpenseDate'];
 		<div class="row analytics-row">
 			<div class="col-md-8">
 				<div class="panel panel-default analytics-panel">
-					<div class="panel-heading">Day by Day - <?php echo $selectedMonthLabel; ?></div>
+					<div class="panel-heading">Day by Day - <?php echo $selectedMonthLabel; ?> (<?php echo $selectedCurrency; ?>)</div>
 					<div class="panel-body">
 						<form method="get" action="dashboard.php" class="analytics-filter form-inline">
 							<div class="form-group">
-								<label for="m">Month</label>
-								<select name="m" id="m" class="form-control">
-									<?php for($m=1;$m<=12;$m++){ ?>
-									<option value="<?php echo $m; ?>" <?php if($selectedMonth==$m){ echo "selected"; } ?>>
-										<?php echo date('F', mktime(0,0,0,$m,1)); ?>
-									</option>
-									<?php } ?>
-								</select>
-							</div>
-							<div class="form-group">
-								<label for="y">Year</label>
-								<select name="y" id="y" class="form-control">
-									<?php foreach($yearOptions as $yr){ ?>
-									<option value="<?php echo $yr; ?>" <?php if($selectedYear==$yr){ echo "selected"; } ?>><?php echo $yr; ?></option>
+								<label for="cur">Currency</label>
+								<select name="cur" id="cur" class="form-control">
+									<?php foreach($currencyOptions as $cur){ ?>
+									<option value="<?php echo $cur; ?>" <?php if($selectedCurrency==$cur){ echo "selected"; } ?>><?php echo $cur; ?></option>
 									<?php } ?>
 								</select>
 							</div>
@@ -253,7 +254,7 @@ $latestDate=$latestResult['ExpenseDate'];
 			</div>
 			<div class="col-md-4">
 				<div class="panel panel-default analytics-panel">
-					<div class="panel-heading">Top Spending Categories - <?php echo $currentMonthLabel; ?></div>
+					<div class="panel-heading">Top Spending Categories - <?php echo $selectedMonthLabel; ?> (<?php echo $selectedCurrency; ?>)</div>
 					<div class="panel-body">
 						<?php if(count($topItemLabels)>0){ ?>
 						<div class="analytics-chart-wrap">
@@ -281,7 +282,7 @@ $latestDate=$latestResult['ExpenseDate'];
 				<div class="panel panel-default insight-card">
 					<div class="panel-body">
 						<p class="insight-label">Avg Per Active Day</p>
-						<h3 class="insight-value"><?php echo usd_after($avgPerActiveDay); ?></h3>
+						<h3 class="insight-value"><?php echo money_after($avgPerActiveDay,$selectedCurrency); ?></h3>
 						<p class="text-muted">Average spend on active days in <?php echo $selectedMonthLabel; ?></p>
 					</div>
 				</div>
@@ -290,8 +291,36 @@ $latestDate=$latestResult['ExpenseDate'];
 				<div class="panel panel-default insight-card">
 					<div class="panel-body">
 						<p class="insight-label">Highest Single Expense</p>
-						<h3 class="insight-value"><?php echo usd_after($maxSingleExpense); ?></h3>
-						<p class="text-muted"><?php if($latestItem!=""){ echo "Latest: ".$latestItem." (".usd_after($latestCost).") on ".$latestDate; } else { echo "No expenses yet"; } ?></p>
+						<h3 class="insight-value"><?php echo money_after($maxSingleExpense,$selectedCurrency); ?></h3>
+						<p class="text-muted"><?php if($latestItem!=""){ echo "Latest: ".$latestItem." (".money_after($latestCost,$selectedCurrency).") on ".$latestDate; } else { echo "No expenses yet"; } ?></p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="row analytics-row">
+			<div class="col-md-12">
+				<div class="panel panel-default analytics-panel">
+					<div class="panel-heading">Totals by Currency</div>
+					<div class="panel-body">
+						<div class="table-responsive">
+							<table class="table table-bordered">
+								<thead>
+									<tr>
+										<th>Currency</th>
+										<th>Total</th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach($currencyTotals as $cur=>$total){ ?>
+									<tr>
+										<td><?php echo $cur; ?></td>
+										<td><?php echo money_after($total,$cur); ?></td>
+									</tr>
+									<?php } ?>
+								</tbody>
+							</table>
+						</div>
 					</div>
 				</div>
 			</div>

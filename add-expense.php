@@ -6,6 +6,12 @@ if (strlen($_SESSION['detsuid']==0)) {
   header('location:logout.php');
   } else{
   $userid=$_SESSION['detsuid'];
+$currencyOptions=array('USD','EUR','IQD','GBP','AED','SAR');
+
+$currencyColumn=mysqli_query($con,"SHOW COLUMNS FROM tblexpense LIKE 'Currency'");
+if(mysqli_num_rows($currencyColumn)==0){
+  mysqli_query($con,"ALTER TABLE tblexpense ADD COLUMN Currency varchar(10) NOT NULL DEFAULT 'USD' AFTER ExpenseCost");
+}
 
 mysqli_query($con, "CREATE TABLE IF NOT EXISTS tblitems (
   ID int(11) NOT NULL AUTO_INCREMENT,
@@ -21,7 +27,11 @@ if(isset($_POST['submit']))
     $dateexpense=$_POST['dateexpense'];
      $item=$_POST['item'];
      $costitem=$_POST['costitem'];
-    $query=mysqli_query($con, "insert into tblexpense(UserId,ExpenseDate,ExpenseItem,ExpenseCost) value('$userid','$dateexpense','$item','$costitem')");
+     $currency=$_POST['currency'];
+     if(!in_array($currency,$currencyOptions)){
+      $currency='USD';
+     }
+    $query=mysqli_query($con, "insert into tblexpense(UserId,ExpenseDate,ExpenseItem,ExpenseCost,Currency) value('$userid','$dateexpense','$item','$costitem','$currency')");
 if($query){
 echo "<script>alert('Expense has been added');</script>";
 echo "<script>window.location.href='manage-expense.php'</script>";
@@ -102,6 +112,14 @@ echo "<script>alert('Something went wrong. Please try again');</script>";
 								<div class="form-group">
 									<label>Cost of Item</label>
 									<input class="form-control" type="text" value="" required="true" name="costitem">
+								</div>
+								<div class="form-group">
+									<label>Currency</label>
+									<select class="form-control" name="currency" required="true">
+										<?php foreach($currencyOptions as $currency){ ?>
+										<option value="<?php echo $currency; ?>"><?php echo $currency; ?></option>
+										<?php } ?>
+									</select>
 								</div>
 																
 								<div class="form-group has-success">
