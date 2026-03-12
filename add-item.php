@@ -7,6 +7,7 @@ if (strlen($_SESSION['detsuid'] == 0)) {
 } else {
   $userid = $_SESSION['detsuid'];
   $msg = "";
+  $editItem = null;
 
   mysqli_query($con, "CREATE TABLE IF NOT EXISTS tblitems (
     ID int(11) NOT NULL AUTO_INCREMENT,
@@ -16,6 +17,15 @@ if (strlen($_SESSION['detsuid'] == 0)) {
     PRIMARY KEY (ID),
     KEY idx_userid (UserId)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+  if (isset($_GET['editid'])) {
+    $editid = intval($_GET['editid']);
+    $editQuery = mysqli_query($con, "SELECT ID, ItemName FROM tblitems WHERE ID='$editid' AND UserId='$userid'");
+    $editItem = mysqli_fetch_array($editQuery);
+    if (!$editItem) {
+      $msg = "Item not found.";
+    }
+  }
 
   if (isset($_POST['submit'])) {
     $itemname = trim($_POST['itemname']);
@@ -35,6 +45,34 @@ if (strlen($_SESSION['detsuid'] == 0)) {
           $msg = "Something went wrong. Please try again.";
         }
       }
+    }
+  }
+
+  if (isset($_POST['update'])) {
+    $itemid = intval($_POST['itemid']);
+    $itemname = trim($_POST['itemname']);
+
+    if ($itemname == "") {
+      $msg = "Item name is required.";
+    } else {
+      $itemname = mysqli_real_escape_string($con, $itemname);
+      $check = mysqli_query($con, "SELECT ID FROM tblitems WHERE UserId='$userid' AND ItemName='$itemname' AND ID!='$itemid'");
+      if (mysqli_num_rows($check) > 0) {
+        $msg = "This item already exists.";
+      } else {
+        $query = mysqli_query($con, "UPDATE tblitems SET ItemName='$itemname' WHERE ID='$itemid' AND UserId='$userid'");
+        if ($query) {
+          echo "<script>alert('Item updated successfully');</script>";
+          echo "<script>window.location.href='add-item.php'</script>";
+        } else {
+          $msg = "Something went wrong. Please try again.";
+        }
+      }
+    }
+
+    if ($msg != "") {
+      $editQuery = mysqli_query($con, "SELECT ID, ItemName FROM tblitems WHERE ID='$itemid' AND UserId='$userid'");
+      $editItem = mysqli_fetch_array($editQuery);
     }
   }
 
@@ -76,18 +114,26 @@ if (strlen($_SESSION['detsuid'] == 0)) {
     <div class="row">
       <div class="col-lg-12">
         <div class="panel panel-default">
-          <div class="panel-heading">Add Items</div>
+          <div class="panel-heading"><?php echo $editItem ? 'Edit Item' : 'Add Items'; ?></div>
           <div class="panel-body">
             <p style="font-size:16px; color:red" align="center"><?php if ($msg) { echo $msg; } ?></p>
 
             <div class="col-md-6">
               <form role="form" method="post" action="">
+                <?php if ($editItem) { ?>
+                <input type="hidden" name="itemid" value="<?php echo $editItem['ID']; ?>">
+                <?php } ?>
                 <div class="form-group">
                   <label>Item Name</label>
-                  <input class="form-control" type="text" name="itemname" required="true" maxlength="150" placeholder="e.g. Groceries">
+                  <input class="form-control" type="text" name="itemname" required="true" maxlength="150" placeholder="e.g. Groceries" value="<?php echo $editItem ? htmlentities($editItem['ItemName']) : ''; ?>">
                 </div>
                 <div class="form-group has-success">
+                  <?php if ($editItem) { ?>
+                  <button type="submit" class="btn btn-primary" name="update">Update Item</button>
+                  <a href="add-item.php" class="btn btn-default">Cancel</a>
+                  <?php } else { ?>
                   <button type="submit" class="btn btn-primary" name="submit">Add Item</button>
+                  <?php } ?>
                 </div>
               </form>
             </div>
@@ -115,6 +161,9 @@ if (strlen($_SESSION['detsuid'] == 0)) {
                       <td><?php echo $row['ItemName']; ?></td>
                       <td><?php echo $row['CreatedAt']; ?></td>
                       <td>
+                        <a class="btn btn-xs btn-info" href="add-item.php?editid=<?php echo $row['ID']; ?>">
+                          <em class="fa fa-pencil"></em> Edit
+                        </a>
                         <a class="btn btn-xs btn-danger" href="add-item.php?delid=<?php echo $row['ID']; ?>" onclick="return confirm('Delete this item?')">
                           <em class="fa fa-trash"></em> Delete
                         </a>
