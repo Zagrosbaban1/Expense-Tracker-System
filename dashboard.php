@@ -254,7 +254,7 @@ $latestDate=$latestResult['ExpenseDate'];
 			</div>
 			<div class="col-md-4">
 				<div class="panel panel-default analytics-panel">
-					<div class="panel-heading">Top Spending Categories - <?php echo $selectedMonthLabel; ?> (<?php echo $selectedCurrency; ?>)</div>
+					<div class="panel-heading">Top Spend By Categories - <?php echo $selectedMonthLabel; ?> (<?php echo $selectedCurrency; ?>)</div>
 					<div class="panel-body">
 						<?php if(count($topItemLabels)>0){ ?>
 						<div class="analytics-chart-wrap">
