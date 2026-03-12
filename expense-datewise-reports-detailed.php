@@ -2,232 +2,247 @@
 session_start();
 error_reporting(0);
 include('includes/dbconnection.php');
+include('includes/report-helpers.php');
 if (strlen($_SESSION['detsuid']==0)) {
   header('location:logout.php');
-  } else{
-if(!function_exists('usd_after')){
-  function usd_after($amount){
-    return number_format((float)$amount, 2).' $';
+} else {
+  $userid = $_SESSION['detsuid'];
+  $currency = report_selected_currency('currency');
+  $msg = '';
+  $fromDate = isset($_POST['fromdate']) ? $_POST['fromdate'] : '';
+  $toDate = isset($_POST['todate']) ? $_POST['todate'] : '';
+  $rows = array();
+  $labels = array();
+  $values = array();
+  $totalExpense = 0;
+  $recordCount = 0;
+  $topPeriodLabel = 'N/A';
+  $topPeriodValue = 0;
+
+  $currencyColumn = mysqli_query($con, "SHOW COLUMNS FROM tblexpense LIKE 'Currency'");
+  if (mysqli_num_rows($currencyColumn) == 0) {
+    mysqli_query($con, "ALTER TABLE tblexpense ADD COLUMN Currency varchar(10) NOT NULL DEFAULT 'USD' AFTER ExpenseCost");
   }
-}
 
-  
+  if ($fromDate == '' || $toDate == '') {
+    $msg = 'Please choose both dates.';
+  } elseif ($fromDate > $toDate) {
+    $msg = 'From date cannot be after To date.';
+  } else {
+    $query = mysqli_query($con, "SELECT ExpenseDate, SUM(ExpenseCost) as totalamount FROM tblexpense WHERE UserId='$userid' AND Currency='$currency' AND ExpenseDate BETWEEN '$fromDate' AND '$toDate' GROUP BY ExpenseDate ORDER BY ExpenseDate ASC");
+    while ($row = mysqli_fetch_array($query)) {
+      $rows[] = $row;
+      $labels[] = date('M j', strtotime($row['ExpenseDate']));
+      $values[] = (float)$row['totalamount'];
+      $totalExpense += (float)$row['totalamount'];
+    }
 
-  ?>
+    $recordCount = count($rows);
+    if ($recordCount > 0) {
+      $topPeriodValue = max($values);
+      foreach ($rows as $row) {
+        if ((float)$row['totalamount'] === (float)$topPeriodValue) {
+          $topPeriodLabel = date('F j, Y', strtotime($row['ExpenseDate']));
+          break;
+        }
+      }
+    }
+  }
+?>
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Daily Expense Tracker || Datewise Expense Report</title>
-	<link href="css/bootstrap.min.css" rel="stylesheet">
-	<link href="css/font-awesome.min.css" rel="stylesheet">
-	<link href="css/datepicker3.css" rel="stylesheet">
-	<link href="css/styles.css" rel="stylesheet">
-	
-	<!--Custom Font-->
-	<link href="https://fonts.googleapis.com/css?family=Montserrat:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
-	
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daily Expense Tracker || Daily Expense Report</title>
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/font-awesome.min.css" rel="stylesheet">
+  <link href="css/datepicker3.css" rel="stylesheet">
+  <link href="css/styles.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+  <style>
+    .report-shell { padding-top: 24px; padding-bottom: 32px; background: linear-gradient(180deg, #f8fafc 0%, #eef3f8 100%); min-height: 100vh; }
+    .report-block { background: #fff; border: 1px solid #dbe4ee; border-radius: 18px; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06); padding: 24px; margin-bottom: 22px; }
+    .report-title { margin: 0 0 6px; font-size: 28px; font-weight: 700; color: #0f172a; }
+    .report-subtitle { margin: 0; color: #64748b; }
+    .metric-card { padding: 20px; }
+    .metric-label { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: #64748b; font-weight: 700; }
+    .metric-value { margin: 0; font-size: 28px; font-weight: 700; color: #0f172a; }
+    .chart-box { position: relative; height: 320px; overflow: hidden; }
+    .chart-box canvas { display: block; width: 100% !important; height: 100% !important; }
+    .table-clean > thead > tr > th, .table-clean > tbody > tr > td, .table-clean > tfoot > tr > th { padding: 14px 12px; border-top: 1px solid #e2e8f0; }
+    .table-clean > thead > tr > th { border-top: 0; color: #64748b; text-transform: uppercase; letter-spacing: .08em; font-size: 12px; }
+    .empty-state { padding: 36px 16px; text-align: center; color: #64748b; }
+    .alert-lite { margin-top: 18px; padding: 14px 16px; border-radius: 14px; background: #fff7ed; color: #9a3412; }
+    .toolbar-link { margin-top: 14px; display: inline-block; }
+    @media (max-width: 767px) {
+      .report-block { padding: 18px; }
+      .report-title { font-size: 24px; }
+      .metric-value { font-size: 22px; }
+      .chart-box { height: 240px; }
+    }
+  </style>
 </head>
 <body>
-	<?php include_once('includes/header.php');?>
-	<?php include_once('includes/sidebar.php');?>
-		
-	<div class="col-sm-9 col-sm-offset-3 col-lg-10 col-lg-offset-2 main">
-		<div class="row">
-			<ol class="breadcrumb">
-				<li><a href="#">
-					<em class="fa fa-home"></em>
-				</a></li>
-				<li class="active">Datewise Expense Report</li>
-			</ol>
-		</div><!--/.row-->
-		
-		
-				
-		
-		<div class="row">
-			<div class="col-lg-12">
-			
-				
-				
-				<div class="panel panel-default">
-					<div class="panel-heading">Datewise Expense Report</div>
-					<div class="panel-body">
+  <?php include_once('includes/header.php');?>
+  <?php include_once('includes/sidebar.php');?>
+  <div class="col-sm-9 col-sm-offset-3 col-lg-10 col-lg-offset-2 main report-shell">
+    <div class="report-block">
+      <h1 class="report-title">Daily report</h1>
+      <p class="report-subtitle">Range: <strong><?php echo htmlentities($fromDate); ?></strong> to <strong><?php echo htmlentities($toDate); ?></strong> in <strong><?php echo $currency; ?></strong></p>
+      <a class="toolbar-link btn btn-default" href="expense-datewise-reports.php?cur=<?php echo $currency; ?>">Change filters</a>
+      <?php if ($msg != '') { ?>
+      <div class="alert-lite"><?php echo $msg; ?></div>
+      <?php } ?>
+    </div>
 
-						<div class="col-md-12">
-					
-<?php
-$fdate = $_POST['fromdate'];
-$tdate = $_POST['todate'];
-$labels = array();
-$values = array();
-$rows = array();
-$totalsexp = 0;
-$cnt = 1;
-$userid = $_SESSION['detsuid'];
+    <?php if ($msg == '') { ?>
+    <div class="row">
+      <div class="col-sm-4"><div class="report-block metric-card"><p class="metric-label">Total</p><h3 class="metric-value"><?php echo report_money($totalExpense, $currency); ?></h3></div></div>
+      <div class="col-sm-4"><div class="report-block metric-card"><p class="metric-label">Days With Spending</p><h3 class="metric-value"><?php echo $recordCount; ?></h3></div></div>
+      <div class="col-sm-4"><div class="report-block metric-card"><p class="metric-label">Highest Day</p><h3 class="metric-value"><?php echo report_money($topPeriodValue, $currency); ?></h3><p class="report-subtitle"><?php echo $topPeriodLabel; ?></p></div></div>
+    </div>
 
-$ret = mysqli_query($con, "SELECT ExpenseDate,SUM(ExpenseCost) as totaldaily FROM tblexpense where (ExpenseDate BETWEEN '$fdate' and '$tdate') && (UserId='$userid') group by ExpenseDate order by ExpenseDate asc");
-while ($row = mysqli_fetch_array($ret)) {
-  $rows[] = $row;
-  $labels[] = $row['ExpenseDate'];
-  $values[] = (float)$row['totaldaily'];
-  $totalsexp += (float)$row['totaldaily'];
-}
-$recordCount = count($rows);
-?>
-<div class="report-header">
-  <h4 class="color-blue">Datewise Expense Report</h4>
-  <p>From <strong><?php echo $fdate; ?></strong> to <strong><?php echo $tdate; ?></strong></p>
-</div>
-
-<div class="row report-metrics">
-  <div class="col-sm-4">
-    <div class="panel panel-default metric-card">
-      <div class="panel-body">
-        <p>Total Expense</p>
-        <h3><?php echo usd_after($totalsexp); ?></h3>
+    <div class="row">
+      <div class="col-md-7">
+        <div class="report-block">
+          <h3 class="metric-label">Trend</h3>
+          <?php if ($recordCount > 0) { ?>
+          <div class="chart-box" id="dailyLineChartWrap"><canvas id="dailyLineChart"></canvas></div>
+          <?php } else { ?>
+          <div class="empty-state">No daily expenses found for this range.</div>
+          <?php } ?>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="report-block">
+          <h3 class="metric-label">Totals</h3>
+          <?php if ($recordCount > 0) { ?>
+          <div class="chart-box" id="dailyBarChartWrap"><canvas id="dailyBarChart"></canvas></div>
+          <?php } else { ?>
+          <div class="empty-state">Nothing to compare yet.</div>
+          <?php } ?>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="col-sm-4">
-    <div class="panel panel-default metric-card">
-      <div class="panel-body">
-        <p>Days Count</p>
-        <h3><?php echo $recordCount; ?></h3>
+
+    <div class="report-block">
+      <h3 class="metric-label">Breakdown</h3>
+      <div class="table-responsive">
+        <table class="table table-clean">
+          <thead>
+            <tr><th>#</th><th>Date</th><th>Total</th></tr>
+          </thead>
+          <tbody>
+            <?php if ($recordCount > 0) { $cnt = 1; foreach ($rows as $row) { ?>
+            <tr>
+              <td><?php echo $cnt; ?></td>
+              <td><?php echo date('F j, Y', strtotime($row['ExpenseDate'])); ?></td>
+              <td><?php echo report_money($row['totalamount'], $currency); ?></td>
+            </tr>
+            <?php $cnt++; } } else { ?>
+            <tr><td colspan="3" class="empty-state">No records found.</td></tr>
+            <?php } ?>
+          </tbody>
+          <?php if ($recordCount > 0) { ?>
+          <tfoot>
+            <tr><th colspan="2" style="text-align:center;">Grand Total</th><th><?php echo report_money($totalExpense, $currency); ?></th></tr>
+          </tfoot>
+          <?php } ?>
+        </table>
       </div>
     </div>
+    <?php } ?>
   </div>
-  <div class="col-sm-4">
-    <div class="panel panel-default metric-card">
-      <div class="panel-body">
-        <p>Average / Day</p>
-        <h3><?php echo $recordCount > 0 ? usd_after($totalsexp / $recordCount) : usd_after(0); ?></h3>
-      </div>
-    </div>
-  </div>
-</div>
+  <script src="js/jquery-1.11.1.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <script src="js/chart.min.js"></script>
+  <script src="js/chart-data.js"></script>
+  <script src="js/bootstrap-datepicker.js"></script>
+  <script src="js/custom.js"></script>
+  <script>
+    (function () {
+      var labels = <?php echo json_encode($labels); ?>;
+      var values = <?php echo json_encode($values); ?>;
+      var moneySuffix = <?php echo json_encode(' ' . report_currency_symbol($currency)); ?>;
+      var isMobile = window.innerWidth < 768;
 
-<?php if ($recordCount > 0) { ?>
-<div class="row">
-  <div class="col-md-6">
-    <div class="panel panel-default">
-      <div class="panel-heading">Expense Trend (Line)</div>
-      <div class="panel-body">
-        <canvas id="dateLineChart" height="140"></canvas>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-6">
-    <div class="panel panel-default">
-      <div class="panel-heading">Expense Comparison (Bar)</div>
-      <div class="panel-body">
-        <canvas id="dateBarChart" height="140"></canvas>
-      </div>
-    </div>
-  </div>
-</div>
-<?php } ?>
+      if (!labels.length) return;
 
-<div class="table-responsive">
-  <table id="datatable" class="table table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
-    <thead>
-      <tr>
-        <th>S.NO</th>
-        <th>Date</th>
-        <th>Expense Amount</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php foreach ($rows as $row) { ?>
-      <tr>
-        <td><?php echo $cnt; ?></td>
-        <td><?php echo $row['ExpenseDate']; ?></td>
-        <td><?php echo usd_after($row['totaldaily']); ?></td>
-      </tr>
-      <?php $cnt = $cnt + 1; } ?>
-      <tr>
-        <th colspan="2" style="text-align:center">Grand Total</th>
-        <td><?php echo usd_after($totalsexp); ?></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+      function setChartHeight(id, count) {
+        var box = document.getElementById(id);
+        if (!box) return;
+        if (isMobile) {
+          box.style.height = "240px";
+          return;
+        }
+        box.style.height = Math.min(420, Math.max(280, 220 + (count * 8))) + "px";
+      }
 
+      function compactMoney(value) {
+        if (value >= 1000000) return (value / 1000000).toFixed(1) + "M" + moneySuffix;
+        if (value >= 1000) return (value / 1000).toFixed(1) + "K" + moneySuffix;
+        return value.toFixed(0) + moneySuffix;
+      }
 
+      function slimLabels(source) {
+        if (!isMobile || source.length <= 6) return source;
+        return source.map(function (label, index) {
+          return index % 2 === 0 ? label : "";
+        });
+      }
 
+      if (Chart.types.BarWithLabels === undefined) {
+        Chart.types.Bar.extend({
+          name: "BarWithLabels",
+          draw: function () {
+            Chart.types.Bar.prototype.draw.apply(this, arguments);
+            var ctx = this.chart.ctx;
+            ctx.font = (isMobile ? "9px" : "10px") + " Montserrat";
+            ctx.fillStyle = "#334155";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "bottom";
+            this.datasets.forEach(function (dataset) {
+              dataset.bars.forEach(function (bar) {
+                var labelY = Math.max(bar.y - 8, isMobile ? 18 : 24);
+                ctx.fillText(compactMoney(bar.value), bar.x, labelY);
+              });
+            });
+          }
+        });
+      }
 
-						</div>
-					</div>
-				</div><!-- /.panel-->
-			</div><!-- /.col-->
-			<?php include_once('includes/footer.php');?>
-		</div><!-- /.row -->
-	</div><!--/.main-->
-	
-<script src="js/jquery-1.11.1.min.js"></script>
-	<script src="js/bootstrap.min.js"></script>
-	<script src="js/chart.min.js"></script>
-	<script src="js/chart-data.js"></script>
-	<script src="js/easypiechart.js"></script>
-	<script src="js/easypiechart-data.js"></script>
-	<script src="js/bootstrap-datepicker.js"></script>
-	<script src="js/custom.js"></script>
-	<script>
-		(function() {
-			var labels = <?php echo json_encode($labels); ?>;
-			var values = <?php echo json_encode($values); ?>;
-			if (!labels.length) return;
+      setChartHeight("dailyLineChartWrap", labels.length);
+      setChartHeight("dailyBarChartWrap", labels.length);
 
-			var lineData = {
-				labels: labels,
-				datasets: [{
-					fillColor: "rgba(13,143,255,0.18)",
-					strokeColor: "rgba(13,143,255,1)",
-					pointColor: "rgba(13,143,255,1)",
-					pointStrokeColor: "#fff",
-					data: values
-				}]
-			};
+      new Chart(document.getElementById("dailyLineChart").getContext("2d")).Line({
+        labels: slimLabels(labels),
+        datasets: [{ fillColor: "rgba(37,99,235,0.14)", strokeColor: "rgba(37,99,235,1)", pointColor: "rgba(37,99,235,1)", pointStrokeColor: "#fff", data: values }]
+      }, {
+        responsive: true,
+        bezierCurve: false,
+        pointDotRadius: isMobile ? 3 : 4,
+        scaleGridLineColor: "rgba(148,163,184,.18)",
+        scaleFontColor: "#64748b",
+        scaleFontSize: isMobile ? 10 : 12
+      });
 
-			var barData = {
-				labels: labels,
-				datasets: [{
-					fillColor: "rgba(31,185,129,0.75)",
-					strokeColor: "rgba(31,185,129,1)",
-					highlightFill: "rgba(31,185,129,1)",
-					highlightStroke: "rgba(31,185,129,1)",
-					data: values
-				}]
-			};
-
-			var lineCtx = document.getElementById("dateLineChart");
-			var barCtx = document.getElementById("dateBarChart");
-			if (lineCtx) {
-				new Chart(lineCtx.getContext("2d")).Line(lineData, { responsive: true, bezierCurve: false });
-			}
-			if (barCtx) {
-				new Chart(barCtx.getContext("2d")).Bar(barData, {
-					responsive: true,
-					barShowStroke: false,
-					animation: true,
-					animationSteps: 60,
-					animationEasing: "easeOutQuart",
-					onAnimationComplete: function () {
-						var ctx = this.chart.ctx;
-						ctx.font = "12px Arial";
-						ctx.fillStyle = "#1b2b43";
-						ctx.textAlign = "center";
-						ctx.textBaseline = "bottom";
-						this.datasets[0].bars.forEach(function (bar) {
-							ctx.fillText(bar.value.toFixed(2) + " $", bar.x, bar.y - 4);
-						});
-					}
-				});
-			}
-		})();
-	</script>
-	
+      new Chart(document.getElementById("dailyBarChart").getContext("2d")).BarWithLabels({
+        labels: slimLabels(labels),
+        datasets: [{ fillColor: "rgba(15,23,42,0.85)", strokeColor: "rgba(15,23,42,1)", highlightFill: "rgba(30,41,59,1)", highlightStroke: "rgba(30,41,59,1)", data: values }]
+      }, {
+        responsive: true,
+        barShowStroke: false,
+        barValueSpacing: isMobile ? 4 : 8,
+        barDatasetSpacing: isMobile ? 2 : 4,
+        scaleGridLineColor: "rgba(148,163,184,.14)",
+        scaleLineColor: "rgba(148,163,184,.2)",
+        scaleFontColor: "#64748b",
+        scaleFontSize: isMobile ? 10 : 12,
+        scaleOverride: false
+      });
+    })();
+  </script>
 </body>
 </html>
 <?php } ?>

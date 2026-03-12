@@ -108,6 +108,25 @@ while($irow=mysqli_fetch_array($topItemsQuery)){
   $topItemLabels[]=$irow['ExpenseItem'];
   $topItemValues[]=(float)$irow['total'];
 }
+$topChartColors=array('#18c7b8', '#2563eb', '#f59e0b', '#fb7185', '#0f172a');
+$topCategoryTotal=array_sum($topItemValues);
+$topCategorySegments=array();
+if($topCategoryTotal>0){
+  $circumference=2*pi()*84;
+  $offset=0;
+  foreach($topItemValues as $index=>$value){
+    $segmentLength=($value/$topCategoryTotal)*$circumference;
+    $topCategorySegments[]=array(
+      'label'=>$topItemLabels[$index],
+      'value'=>$value,
+      'color'=>$topChartColors[$index % count($topChartColors)],
+      'dash'=>$segmentLength,
+      'gap'=>$circumference-$segmentLength,
+      'offset'=>-$offset
+    );
+    $offset+=$segmentLength;
+  }
+}
 
 $activeDaysQuery=mysqli_query($con,"SELECT COUNT(DISTINCT ExpenseDate) as activeDays FROM tblexpense WHERE UserId='$userid' AND Currency='$selectedCurrency' AND ExpenseDate BETWEEN '$selectedPeriodStart' AND '$selectedPeriodEnd'");
 $activeDaysResult=mysqli_fetch_array($activeDaysQuery);
@@ -273,11 +292,124 @@ $latestDate=$latestResult['ExpenseDate'];
 		.chart-box.chart-box-small {
 			height: 260px;
 		}
+		.doughnut-panel {
+			padding: 24px 22px 18px;
+		}
+		.doughnut-panel .section-copy {
+			margin-bottom: 12px;
+		}
+		.donut-card {
+			padding: 10px 8px 2px;
+			border-radius: 18px;
+			background: radial-gradient(circle at top, #f8fbff 0%, #ffffff 62%);
+		}
+		.doughnut-wrap {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 4px 0 0;
+		}
+		.donut-chart {
+			position: relative;
+			width: 220px;
+			height: 220px;
+			margin: 0 auto;
+		}
+		.donut-chart svg {
+			width: 100%;
+			height: 100%;
+			transform: rotate(-90deg);
+			filter: drop-shadow(0 12px 20px rgba(15, 23, 42, 0.08));
+		}
+		.donut-track {
+			fill: none;
+			stroke: #e7eef7;
+			stroke-width: 22;
+		}
+		.donut-segment {
+			fill: none;
+			stroke-width: 22;
+			stroke-linecap: round;
+			cursor: pointer;
+			transition: opacity .2s ease, stroke-width .2s ease, filter .2s ease;
+			animation: donut-grow .9s ease both;
+		}
+		.donut-chart:hover .donut-segment {
+			opacity: .45;
+		}
+		.donut-chart .donut-segment:hover {
+			opacity: 1;
+			stroke-width: 26;
+			filter: brightness(1.04);
+		}
+		.donut-center {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			width: 118px;
+			height: 118px;
+			margin-left: -59px;
+			margin-top: -59px;
+			border-radius: 50%;
+			background: #ffffff;
+			box-shadow: inset 0 0 0 1px #e2e8f0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			text-align: center;
+			padding: 12px;
+		}
+		.donut-center-label {
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: .08em;
+			text-transform: uppercase;
+			color: #64748b;
+		}
+		.donut-center-value {
+			margin-top: 7px;
+			font-size: 28px;
+			font-weight: 700;
+			line-height: 1;
+			color: #0f172a;
+		}
 		.chart-box canvas {
 			display: block;
 			width: 100% !important;
 			max-width: 100%;
 			height: 100% !important;
+		}
+		.chart-legend {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: 8px 12px;
+			margin: 16px auto 0;
+			padding: 0;
+			list-style: none;
+			max-width: 320px;
+		}
+		.chart-legend li {
+			display: inline-flex;
+			align-items: center;
+			color: #475569;
+			font-size: 12px;
+			line-height: 1.4;
+			padding: 4px 0;
+		}
+		.chart-legend .legend-value {
+			margin-left: 6px;
+			font-weight: 700;
+			color: #0f172a;
+		}
+		.chart-legend .legend-dot {
+			display: inline-block;
+			width: 10px;
+			height: 10px;
+			margin-right: 6px;
+			border-radius: 50%;
+			vertical-align: middle;
 		}
 		.latest-expense {
 			padding: 18px;
@@ -317,6 +449,11 @@ $latestDate=$latestResult['ExpenseDate'];
 			text-align: center;
 			color: #64748b;
 		}
+		@keyframes donut-grow {
+			from {
+				stroke-dasharray: 0 528;
+			}
+		}
 		@media (max-width: 767px) {
 			.dashboard-hero {
 				padding: 22px;
@@ -333,6 +470,26 @@ $latestDate=$latestResult['ExpenseDate'];
 			.chart-box,
 			.chart-box.chart-box-small {
 				height: 240px;
+			}
+			.doughnut-panel {
+				padding: 20px 18px 16px;
+			}
+			.donut-chart {
+				width: 190px;
+				height: 190px;
+			}
+			.donut-center {
+				width: 102px;
+				height: 102px;
+				margin-left: -51px;
+				margin-top: -51px;
+			}
+			.donut-center-value {
+				font-size: 22px;
+			}
+			.chart-legend {
+				max-width: 100%;
+				gap: 6px 10px;
 			}
 		}
 	</style>
@@ -452,13 +609,37 @@ $latestDate=$latestResult['ExpenseDate'];
 
 		<div class="row">
 			<div class="col-md-5">
-				<div class="dashboard-card">
+				<div class="dashboard-card doughnut-panel">
 					<h2 class="section-title">Top categories</h2>
 					<p class="section-copy">Highest spending categories this month.</p>
 					<?php if(count($topItemLabels)>0){ ?>
-					<div class="chart-box chart-box-small">
-						<canvas id="topItemsBarChart"></canvas>
+					<div class="donut-card">
+						<div class="doughnut-wrap">
+							<div class="donut-chart">
+								<svg viewBox="0 0 220 220" aria-hidden="true">
+									<circle class="donut-track" cx="110" cy="110" r="84"></circle>
+									<?php foreach($topCategorySegments as $segment){ ?>
+									<circle class="donut-segment" cx="110" cy="110" r="84" stroke="<?php echo $segment['color']; ?>" stroke-dasharray="<?php echo $segment['dash']; ?> <?php echo $segment['gap']; ?>" stroke-dashoffset="<?php echo $segment['offset']; ?>">
+										<title><?php echo htmlentities($segment['label']); ?>: <?php echo money_after($segment['value'], $selectedCurrency); ?></title>
+									</circle>
+									<?php } ?>
+								</svg>
+								<div class="donut-center">
+									<span class="donut-center-label">Top Spend</span>
+									<span class="donut-center-value"><?php echo number_format($topCategoryTotal, 0); ?></span>
+								</div>
+							</div>
+						</div>
 					</div>
+					<ul class="chart-legend">
+						<?php foreach($topCategorySegments as $segment){ ?>
+						<li>
+							<span class="legend-dot" style="background: <?php echo $segment['color']; ?>;"></span>
+							<?php echo htmlentities($segment['label']); ?>
+							<span class="legend-value"><?php echo money_after($segment['value'], $selectedCurrency); ?></span>
+						</li>
+						<?php } ?>
+					</ul>
 					<?php } else { ?>
 					<p class="empty-state">No category data yet for this month.</p>
 					<?php } ?>
@@ -501,29 +682,6 @@ $latestDate=$latestResult['ExpenseDate'];
 		(function () {
 			var dayLabels = <?php echo json_encode($dayLabels); ?>;
 			var dayValues = <?php echo json_encode($dayValues); ?>;
-			var topItemLabels = <?php echo json_encode($topItemLabels); ?>;
-			var topItemValues = <?php echo json_encode($topItemValues); ?>;
-
-			if (Chart.types.BarWithLabels === undefined) {
-				Chart.types.Bar.extend({
-					name: "BarWithLabels",
-					draw: function () {
-						Chart.types.Bar.prototype.draw.apply(this, arguments);
-
-						var ctx = this.chart.ctx;
-						ctx.font = "12px Montserrat";
-						ctx.fillStyle = "#0f172a";
-						ctx.textAlign = "center";
-						ctx.textBaseline = "bottom";
-
-						this.datasets.forEach(function (dataset) {
-							dataset.bars.forEach(function (bar) {
-								ctx.fillText(bar.value, bar.x, bar.y - 6);
-							});
-						});
-					}
-				});
-			}
 
 			var dailyCanvas = document.getElementById("dailyTrendChart");
 			if (dailyCanvas) {
@@ -544,23 +702,6 @@ $latestDate=$latestResult['ExpenseDate'];
 				});
 			}
 
-			var itemsCanvas = document.getElementById("topItemsBarChart");
-			if (itemsCanvas && topItemLabels.length) {
-				var itemsData = {
-					labels: topItemLabels,
-					datasets: [{
-						fillColor: "rgba(15, 23, 42, 0.85)",
-						strokeColor: "rgba(15, 23, 42, 1)",
-						highlightFill: "rgba(29, 78, 216, 1)",
-						highlightStroke: "rgba(29, 78, 216, 1)",
-						data: topItemValues
-					}]
-				};
-				new Chart(itemsCanvas.getContext("2d")).BarWithLabels(itemsData, {
-					responsive: true,
-					barShowStroke: false
-				});
-			}
 		})();
 	</script>
 		
