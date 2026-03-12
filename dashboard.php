@@ -164,6 +164,7 @@ $latestDate=$latestResult['ExpenseDate'];
 			margin: 0 0 8px;
 			font-size: 30px;
 			font-weight: 700;
+			color: #ffffff;
 		}
 		.dashboard-hero p {
 			margin: 0;
