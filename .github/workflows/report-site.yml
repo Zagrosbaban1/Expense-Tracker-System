@@ -32,10 +32,28 @@ jobs:
           source: ./report
           destination: ./report/_site
 
+      - name: Prepare deploy folder
+        run: |
+          mkdir -p deploy/report
+          cp -r ./report/_site/. ./deploy/report/
+          cat > ./deploy/index.html <<'EOF'
+          <!doctype html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta http-equiv="refresh" content="0; url=/Expense-Tracker-System/report/">
+              <title>Expense Tracker System Report</title>
+            </head>
+            <body>
+              <p>Redirecting to <a href="/Expense-Tracker-System/report/">/Expense-Tracker-System/report/</a>...</p>
+            </body>
+          </html>
+          EOF
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./report/_site
+          path: ./deploy
 
   deploy:
     environment:

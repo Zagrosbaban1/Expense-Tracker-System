@@ -2,8 +2,8 @@ title: Expense Tracker System
 description: Software Engineering Project Report
 remote_theme: just-the-docs/just-the-docs
 
-url: https://YOUR-GITHUB-USERNAME.github.io
-baseurl: /YOUR-REPOSITORY-NAME
+url: https://zagrosbaban1.github.io
+baseurl: /Expense-Tracker-System/report
 
 search_enabled: true
 heading_anchors: true
@@ -14,7 +14,7 @@ plugins:
   - jekyll-remote-theme
 
 aux_links:
-  "Project Repository":
-    - "https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPOSITORY-NAME"
+  "View Repository":
+    - "https://github.com/Zagrosbaban1/Expense-Tracker-System"
 
 footer_content: "Software Engineering project report for the Expense Tracker System."
