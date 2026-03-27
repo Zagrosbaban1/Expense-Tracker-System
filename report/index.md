@@ -8,7 +8,7 @@ description: Home page for the Expense Tracker System university report.
 
 ## Author
 
-- [Student Name]
+- [Zagros Baban]
 
 ## Project Information
 
