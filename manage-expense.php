@@ -62,12 +62,15 @@ $filters = array(
   'q' => isset($_GET['q']) ? trim($_GET['q']) : '',
   'currency' => isset($_GET['currency']) && $_GET['currency'] !== '' ? expense_selected_currency($_GET['currency']) : '',
   'categoryid' => isset($_GET['categoryid']) ? (int)$_GET['categoryid'] : 0,
-  'window' => isset($_GET['window']) && $_GET['window'] === 'last24h' ? 'last24h' : '',
+  'window' => isset($_GET['window']) ? trim($_GET['window']) : '',
   'fromdate' => isset($_GET['fromdate']) ? trim($_GET['fromdate']) : '',
   'todate' => isset($_GET['todate']) ? trim($_GET['todate']) : '',
   'minamount' => isset($_GET['minamount']) ? trim($_GET['minamount']) : '',
   'maxamount' => isset($_GET['maxamount']) ? trim($_GET['maxamount']) : ''
 );
+if (!in_array($filters['window'], array('', 'today', 'yesterday', 'last24h'), true)) {
+  $filters['window'] = '';
+}
 
 $categories = expense_get_categories($con, $userid);
 
@@ -94,7 +97,11 @@ if ($filters['categoryid'] > 0) {
   $types .= 'i';
   $params[] = $filters['categoryid'];
 }
-if ($filters['window'] === 'last24h') {
+if ($filters['window'] === 'today') {
+  $sql .= " AND e.ExpenseDate=CURDATE()";
+} elseif ($filters['window'] === 'yesterday') {
+  $sql .= " AND e.ExpenseDate=DATE_SUB(CURDATE(), INTERVAL 1 DAY)";
+} elseif ($filters['window'] === 'last24h') {
   $sql .= " AND e.CreatedAt BETWEEN DATE_SUB(NOW(), INTERVAL 24 HOUR) AND NOW()";
 }
 if ($filters['fromdate'] !== '' && strtotime($filters['fromdate'])) {
@@ -151,7 +158,11 @@ $summaryText = $filters['currency'] !== ''
   ? expense_money($filteredTotal, $filters['currency'])
   : number_format($filteredTotal, 2) . ' (mixed currencies)';
 $summaryParts = array($totalRows . ' records', $summaryText);
-if ($filters['window'] === 'last24h') {
+if ($filters['window'] === 'today') {
+  $summaryParts[] = 'for today';
+} elseif ($filters['window'] === 'yesterday') {
+  $summaryParts[] = 'for yesterday';
+} elseif ($filters['window'] === 'last24h') {
   $summaryParts[] = 'created in the last 24 hours';
 }
 
@@ -252,6 +263,8 @@ $exportLink = 'manage-expense.php?' . http_build_query($queryString);
                   <label for="window">Time Window</label>
                   <select class="form-control" id="window" name="window">
                     <option value="">Any time</option>
+                    <option value="today" <?php if ($filters['window'] === 'today') { echo 'selected'; } ?>>Today</option>
+                    <option value="yesterday" <?php if ($filters['window'] === 'yesterday') { echo 'selected'; } ?>>Yesterday</option>
                     <option value="last24h" <?php if ($filters['window'] === 'last24h') { echo 'selected'; } ?>>Last 24 hours</option>
                   </select>
                 </div>

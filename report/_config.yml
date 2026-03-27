@@ -1,0 +1,14 @@
+title: Expense Tracker System
+description: University software engineering report for the Expense Tracker System project.
+remote_theme: just-the-docs/just-the-docs
+plugins:
+  - jekyll-remote-theme
+search_enabled: true
+heading_anchors: true
+color_scheme: light
+nav_sort: case_insensitive
+back_to_top: true
+back_to_top_text: "Back to top"
+baseurl: "/Expense-Tracker-System/report"
+url: "https://zagrosbaban1.github.io"
+footer_content: "Software engineering report for the Expense Tracker System project."
