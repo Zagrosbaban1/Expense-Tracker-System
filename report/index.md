@@ -27,18 +27,18 @@ From a software engineering perspective, the project is suitable for academic pr
 
 ## Report Map
 
-- [Concept](./sections/concept)
-- [Requirements](./sections/requirements)
-- [Design](./sections/design)
-- [Development](./sections/development)
-- [Validation](./sections/validation)
-- [Release](./sections/release)
-- [Deployment](./sections/deployment)
-- [CI/CD](./sections/ci-cd)
-- [User Guide](./sections/user-guide)
-- [Developer Guide](./sections/developer-guide)
-- [Self-evaluation](./sections/self-evaluation)
-- [Future Work](./sections/future-work)
+- [Concept](./concept)
+- [Requirements](./requirements)
+- [Design](./design)
+- [Development](./development)
+- [Validation](./validation)
+- [Release](./release)
+- [Deployment](./deployment)
+- [CI/CD](./ci-cd)
+- [User Guide](./user-guide)
+- [Developer Guide](./developer-guide)
+- [Self-evaluation](./self-evaluation)
+- [Future Work](./future-work)
 
 ## Submission Notes
 
