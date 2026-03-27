@@ -55,6 +55,53 @@ The project follows a modular PHP web application structure with three main laye
 +--------------------+
 ```
 
+## Website Navigation Chart
+
+```text
++-------------------+
+| Login / Register  |
++---------+---------+
+          |
+          v
++-------------------+
+|    Dashboard      |
++----+---+---+---+--+
+     |   |   |   |
+     |   |   |   +------------------------+
+     |   |   |                            |
+     |   |   v                            v
+     |   |  +-------------------+   +-------------------+
+     |   |  |  Manage Expense   |<->|   Add / Edit      |
+     |   |  +-------------------+   |     Expense       |
+     |   |           |              +-------------------+
+     |   |           v
+     |   |  +-------------------+
+     |   |  | CSV Export /      |
+     |   |  | Filter Results    |
+     |   |  +-------------------+
+     |   |
+     |   +---------------------> +-------------------+
+     |                            | Categories &      |
+     |                            | Budgets           |
+     |                            +-------------------+
+     |
+     +--------------------------> +-------------------+
+     |                            | Recurring         |
+     |                            | Expenses          |
+     |                            +-------------------+
+     |
+     +--------------------------> +-------------------+
+     |                            | Reports           |
+     |                            | Day / Month / Year|
+     |                            +-------------------+
+     |
+     +--------------------------> +-------------------+
+                                  | User Profile      |
+                                  +-------------------+
+```
+
+This chart reflects the main website navigation flow. After authentication, the dashboard acts as the central hub and connects the user to expense management, budgeting, recurring scheduling, reports, and profile settings.
+
 ## Main Modules
 
 - Authentication module
