@@ -5,7 +5,7 @@ nav_order: 1
 <div id="top"></div>
 <div class="report-sidebar">
   <div class="report-sidebar-title">Contents</div>
-  <a href="#top">Home</a>
+  <a href="#home">Home</a>
   <a href="#concept">Concept</a>
   <a href="#requirements">Requirements</a>
   <a href="#design">Design</a>
@@ -75,6 +75,7 @@ html { scroll-behavior: smooth; }
 # Expense Tracker System
 
 ## Home
+{: #home }
 
 ### Project Title
 Expense Tracker System
@@ -85,9 +86,9 @@ Expense Tracker System
 ### Abstract
 The Expense Tracker System is a web-based personal finance management application developed using PHP, MySQL, HTML, CSS, JavaScript, Bootstrap, and Chart.js. The system allows registered users to record daily expenses, organize them by category, attach receipts, define monthly budgets, and generate analytical reports. In addition to basic expense entry, the project supports multi-currency tracking, recurring expenses, category-level budget monitoring, and dashboard-based visual summaries. The main purpose of the system is to help users monitor their spending habits and make better financial decisions through structured data collection and reporting. The project follows a practical modular structure in which the user interface, database access, helper functions, and reporting logic are separated into different files. This improves maintainability and makes the system easier to extend. Overall, the system demonstrates the application of software engineering principles to the design and implementation of a useful real-world financial management solution.
 
-<div id="concept"></div>
 
 ## Concept
+{: #concept }
 
 ### Introduction
 Managing personal expenses manually is difficult, especially when a user wants to review spending patterns over time, compare spending across categories, or keep records such as receipts and recurring payments. Many people rely on notebooks or simple spreadsheets, but those methods are error-prone and do not provide automatic summaries or visual insights.
@@ -113,9 +114,9 @@ The aim of this project is to develop a web-based expense management system that
 ### Scope
 The scope of this project is limited to single-user personal expense tracking after authentication. It covers expense management, report generation, profile management, and budget monitoring. It does not include online payments, banking integration, role-based administration, tax calculation, or mobile-native deployment.
 
-<div id="requirements"></div>
 
 ## Requirements
+{: #requirements }
 
 ### Functional Requirements
 1. The system shall allow users to register with name, email, mobile number, and password.
@@ -158,9 +159,9 @@ The scope of this project is limited to single-user personal expense tracking af
 - Minimum 4 GB RAM
 - Stable local development environment
 
-<div id="design"></div>
 
 ## Design
+{: #design }
 
 ### System Architecture
 The project follows a simple modular web architecture:
@@ -265,11 +266,10 @@ The system produces outputs in the form of:
 - CSV exports
 - Daily, monthly, and yearly report pages
 
-<div id="development"></div>
 
 ## Development
+{: #development }
 
-#<div id="development"></div>
 
 ## Development Approach
 Based on the code structure, the project appears to have been developed incrementally. The older pages use straightforward PHP and SQL mixed inside view files, while the newer pages introduce helper functions, prepared statements, CSRF handling, better validation, modernized layout styling, and more modular logic. This suggests progressive enhancement rather than a full rewrite.
@@ -300,9 +300,9 @@ Recurring entries are stored in a dedicated table. On page access, due entries a
 #### Reporting
 The reporting module summarizes expense totals by day, month, and year. Each report includes total amount, highest period, record count, visual charts, and export to CSV.
 
-<div id="validation"></div>
 
 ## Validation
+{: #validation }
 
 ### Testing Approach
 The project does not include automated unit or integration tests in the repository, so validation is mainly manual. Manual testing can still be structured around core workflows.
@@ -322,7 +322,6 @@ The project does not include automated unit or integration tests in the reposito
 | Generate report | Valid date or month range | Report table and charts are displayed |
 | Export CSV | Click export | Data downloads in CSV format |
 
-#<div id="validation"></div>
 
 ## Validation Results
 From inspection of the code, the project supports the complete main workflow successfully:
@@ -340,16 +339,14 @@ The project shows practical functionality, but validation also reveals areas for
 - Schema migration logic is triggered at runtime from helper functions instead of using dedicated migration scripts.
 - The project has no automated test suite.
 
-<div id="release"></div>
 
 ## Release
+{: #release }
 
-#<div id="release"></div>
 
 ## Release Description
 The current version can be considered a functional academic prototype or local production-ready student project. It offers a complete personal expense tracking workflow from account creation to analytical reporting.
 
-#<div id="release"></div>
 
 ## Release Features
 - Secure session-based access to internal pages
@@ -360,16 +357,14 @@ The current version can be considered a functional academic prototype or local p
 - User profile and default settings
 - Date-wise, month-wise, and year-wise reports
 
-<div id="deployment"></div>
 
 ## Deployment
+{: #deployment }
 
-#<div id="deployment"></div>
 
 ## Deployment Environment
 The project is intended for deployment on a local Apache and MySQL stack such as XAMPP.
 
-#<div id="deployment"></div>
 
 ## Deployment Steps
 1. Install XAMPP.
@@ -380,14 +375,13 @@ The project is intended for deployment on a local Apache and MySQL stack such as
 6. Import the base database structure if available.
 7. Open the project in the browser through `http://localhost/Expense-Tracker-System/`.
 
-#<div id="deployment"></div>
 
 ## Deployment Notes
 Some additional tables and columns are created automatically by helper functions when certain pages are loaded. This helps the system adapt to newer features, although a dedicated migration process would be better in a professional environment.
 
-<div id="ci-cd"></div>
 
 ## CI/CD
+{: #ci-cd }
 
 ### Current Status
 The repository does not show an implemented CI/CD pipeline. There are no visible GitHub Actions, GitLab CI files, or automated deployment scripts in the project.
@@ -407,9 +401,9 @@ The repository does not show an implemented CI/CD pipeline. There are no visible
 4. Deployment is triggered to staging or production.
 5. Smoke tests verify successful release.
 
-<div id="user-guide"></div>
 
 ## User Guide
+{: #user-guide }
 
 ### How to Use the System
 1. Open the application in a browser.
@@ -430,9 +424,9 @@ The repository does not show an implemented CI/CD pipeline. There are no visible
 - Historical analysis
 - Exportable records
 
-<div id="screenshots"></div>
 
 ## System Screenshots
+{: #screenshots }
 
 ### Figure 1. User Registration Page
 This screen allows a new user to create an account by entering full name, email address, mobile number, password, and repeated password. It is the entry point for new users who want to access the expense tracking features of the system.
@@ -470,9 +464,9 @@ The screenshots above should be inserted into the final university report as lab
 - Figure 7: Recurring Expenses Page
 - Figure 8: User Profile Page
 
-<div id="developer-guide"></div>
 
 ## Developer Guide
+{: #developer-guide }
 
 ### Folder Overview
 - `includes/`
@@ -506,9 +500,9 @@ The screenshots above should be inserted into the final university report as lab
 - The system is file-based rather than MVC, so changes should be made carefully to avoid duplication.
 - Shared logic should continue to be moved into helper files to improve maintainability.
 
-<div id="self-evaluation"></div>
 
 ## Self-evaluation
+{: #self-evaluation }
 
 ### Strengths
 - The project solves a clear real-world problem.
@@ -528,9 +522,9 @@ The screenshots above should be inserted into the final university report as lab
 ### Lessons Learned
 This project demonstrates that software engineering is not only about making features work, but also about structuring the code, validating inputs, designing database relationships, and planning for maintainability. It also shows how a system can evolve over time from a simple procedural design into a more modular structure.
 
-<div id="future-work"></div>
 
 ## Future Work
+{: #future-work }
 
 - Replace MD5 password hashing with `password_hash()` and `password_verify()`.
 - Refactor all remaining direct SQL queries to prepared statements.
@@ -543,9 +537,9 @@ This project demonstrates that software engineering is not only about making fea
 - Add email-based password recovery.
 - Build a REST API or mobile app version in the future.
 
-<div id="conclusion"></div>
 
 ## Conclusion
+{: #conclusion }
 The Expense Tracker System is a strong university software engineering project because it addresses a practical problem and delivers a complete web-based solution with several useful modules. The system goes beyond basic data entry by including reporting, budgeting, recurring expenses, receipt management, and visual analytics. From a software engineering perspective, the project demonstrates requirements handling, modular design, database modeling, user-centered functionality, and iterative improvement. At the same time, it reveals valuable improvement opportunities in security, testing, and deployment automation. Overall, the project is functional, relevant, and suitable as an academic case study in web application engineering.
 </div>
 
