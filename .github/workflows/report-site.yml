@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'report/**'
+      - '.github/workflows/report-site.yml'
   workflow_dispatch:
 
 permissions:

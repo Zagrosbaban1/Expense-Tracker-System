@@ -3,8 +3,17 @@ name: PHP Composer
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'composer.json'
+      - 'composer.lock'
+      - '**.php'
+      - '.github/workflows/php.yml'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - 'composer.json'
+      - 'composer.lock'
+      - '**.php'
 
 permissions:
   contents: read
