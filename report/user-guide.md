@@ -14,9 +14,15 @@ Open a browser and go to the address where the application is hosted (locally, `
 
 Once you are signed in you are taken to the dashboard, which is the home screen of the application.
 
+![Login page](pictures/01-login-page.png)
+
+![Registration page](pictures/02-registration-page.png)
+
 2. **Reading the dashboard**
 
 The dashboard gives you an overview of your spending. It shows summary figures for your recent and total spending and presents charts, including how your spending is spread across categories. Use it as a quick health check before diving into details.
+
+![Dashboard page](pictures/03-dashboard-page.png)
 
 3. **Adding an expense**
 
@@ -30,6 +36,8 @@ Open the "Add expense" page and fill in the form:
 
 Submit the form to save the expense. It appears immediately in your expense list and in the dashboard totals.
 
+![Add expense page](pictures/04-add-expense-page.png)
+
 4. **Managing your expenses**
 
 Open the "Manage expenses" page to see your records. From here you can:
@@ -38,18 +46,32 @@ Open the "Manage expenses" page to see your records. From here you can:
 - Delete an expense you no longer need (its receipt is removed with it);
 - Export the filtered list to a CSV file for use in a spreadsheet.
 
+![Manage expenses page](pictures/05-manage-expenses-page.png)
+
 5. **Setting up categories and budgets**
 
 Open the "Categories and budgets" page to organise your spending. You can create new categories, and you can give a category a monthly budget in a chosen currency. As you record expenses, the page and the dashboard show how much of each budget you have used, so you can see when you are approaching or exceeding a limit.
+
+![Categories and budgets page](pictures/06-categories-budgets-page.png)
 
 6. **Scheduling recurring expenses**
 
 For payments that repeat, open the "Recurring expenses" page and define a rule with an item, amount, currency, category, frequency (weekly or monthly), and a start date. From then on, the application creates the due expense for you automatically whenever it becomes due, so regular bills are never forgotten. You can deactivate a rule at any time to stop it.
 
+![Recurring expenses page](pictures/07-recurring-expenses-page.png)
+
 7. **Generating reports**
 
 Open one of the report pages — date-wise, month-wise, or year-wise — and choose a period and currency. The report shows summary cards (including an average per period), a detailed table, and a breakdown of spending by category with a chart. You can export the report to CSV or print it directly from the page.
 
+![Date-wise report page](pictures/08-date-report-page.png)
+
+![Month-wise report page](pictures/09-month-report-page.png)
+
+![Year-wise report page](pictures/10-year-report-page.png)
+
 8. **Adjusting your profile and signing out**
 
 Open the profile page to update your details and to set a default currency and default category, which pre-fill the expense form to save time. When you are finished, use "Log out" to end your session; you will be returned to the login page.
+
+![Profile page](pictures/11-profile-page.png)
