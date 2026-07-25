@@ -209,6 +209,25 @@ $budgetRemaining = $budgetTotal - $budgetSpent;
 $budgetProgress = expense_budget_progress($budgetSpent, $budgetTotal);
 $weeklyChangeText = dashboard_change_text($sum_weekly_expense, $sum_previous_week_expense);
 $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_month_expense);
+
+// Reusable data for the repeated UI blocks so the markup stays a simple loop.
+$metricCards = array(
+  array('label' => 'Last 24 Hours', 'value' => $sum_last_24_hours_expense, 'note' => $last24HoursLabel,      'icon' => 'fa-clock-o',    'accent' => 'accent-blue',   'chip' => null),
+  array('label' => 'Last 7 Days',   'value' => $sum_weekly_expense,        'note' => 'vs previous 7 days',    'icon' => 'fa-calendar-o', 'accent' => 'accent-teal',   'chip' => $weeklyChangeText),
+  array('label' => 'This Month',    'value' => $sum_monthly_expense,       'note' => 'vs previous month',     'icon' => 'fa-line-chart', 'accent' => 'accent-indigo', 'chip' => $monthlyChangeText),
+  array('label' => 'Total',         'value' => $sum_total_expense,         'note' => 'All records in ' . $selectedCurrency, 'icon' => 'fa-money', 'accent' => 'accent-slate', 'chip' => null),
+);
+
+$quickStats = array(
+  array('label' => 'Today',            'value' => expense_money($sum_today_expense, $selectedCurrency)),
+  array('label' => 'Yesterday',        'value' => expense_money($sum_yesterday_expense, $selectedCurrency)),
+  array('label' => 'This Year',        'value' => expense_money($sum_yearly_expense, $selectedCurrency)),
+  array('label' => 'Active Days',      'value' => (string)(int)$activeDays),
+  array('label' => 'Avg / Active Day', 'value' => expense_money($avgPerActiveDay, $selectedCurrency)),
+);
+
+// Only show currencies that actually have spending, so the table is not padded with zeroes.
+$currencyTotalsUsed = array_filter($currencyTotals, function ($total) { return (float)$total > 0; });
 ?>
 <!DOCTYPE html>
 <html>
@@ -341,48 +360,21 @@ $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_m
     </div>
 
     <div class="row">
+      <?php foreach ($metricCards as $card) { ?>
       <div class="col-sm-6 col-lg-3">
-        <div class="dashboard-card metric-card accent-blue">
+        <div class="dashboard-card metric-card <?php echo expense_h($card['accent']); ?>">
           <div class="metric-top">
-            <span class="metric-icon"><i class="fa fa-clock-o"></i></span>
+            <span class="metric-icon"><i class="fa <?php echo expense_h($card['icon']); ?>"></i></span>
+            <?php if ($card['chip'] !== null) { ?>
+            <span class="metric-chip <?php echo dashboard_delta_class($card['chip']); ?>"><?php echo expense_h($card['chip']); ?></span>
+            <?php } ?>
           </div>
-          <p class="metric-label">Last 24 Hours</p>
-          <h3 class="metric-value"><?php echo expense_h(expense_money($sum_last_24_hours_expense, $selectedCurrency)); ?></h3>
-          <p class="metric-note"><?php echo expense_h($last24HoursLabel); ?></p>
+          <p class="metric-label"><?php echo expense_h($card['label']); ?></p>
+          <h3 class="metric-value"><?php echo expense_h(expense_money($card['value'], $selectedCurrency)); ?></h3>
+          <p class="metric-note"><?php echo expense_h($card['note']); ?></p>
         </div>
       </div>
-      <div class="col-sm-6 col-lg-3">
-        <div class="dashboard-card metric-card accent-teal">
-          <div class="metric-top">
-            <span class="metric-icon"><i class="fa fa-calendar-o"></i></span>
-            <span class="metric-chip <?php echo dashboard_delta_class($weeklyChangeText); ?>"><?php echo expense_h($weeklyChangeText); ?></span>
-          </div>
-          <p class="metric-label">Last 7 Days</p>
-          <h3 class="metric-value"><?php echo expense_h(expense_money($sum_weekly_expense, $selectedCurrency)); ?></h3>
-          <p class="metric-note">vs previous 7 days</p>
-        </div>
-      </div>
-      <div class="col-sm-6 col-lg-3">
-        <div class="dashboard-card metric-card accent-indigo">
-          <div class="metric-top">
-            <span class="metric-icon"><i class="fa fa-line-chart"></i></span>
-            <span class="metric-chip <?php echo dashboard_delta_class($monthlyChangeText); ?>"><?php echo expense_h($monthlyChangeText); ?></span>
-          </div>
-          <p class="metric-label">This Month</p>
-          <h3 class="metric-value"><?php echo expense_h(expense_money($sum_monthly_expense, $selectedCurrency)); ?></h3>
-          <p class="metric-note">vs previous month</p>
-        </div>
-      </div>
-      <div class="col-sm-6 col-lg-3">
-        <div class="dashboard-card metric-card accent-slate">
-          <div class="metric-top">
-            <span class="metric-icon"><i class="fa fa-money"></i></span>
-          </div>
-          <p class="metric-label">Total</p>
-          <h3 class="metric-value"><?php echo expense_h(expense_money($sum_total_expense, $selectedCurrency)); ?></h3>
-          <p class="metric-note">All records in <?php echo expense_h($selectedCurrency); ?></p>
-        </div>
-      </div>
+      <?php } ?>
     </div>
 
     <div class="row">
@@ -400,52 +392,11 @@ $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_m
           <h2 class="section-title"><i class="fa fa-bolt"></i>Quick stats</h2>
           <p class="section-copy">Signals that help you read the month faster.</p>
           <div class="quick-grid">
+            <?php foreach ($quickStats as $stat) { ?>
             <div class="quick-stat">
-              <span>Today</span>
-              <strong><?php echo expense_h(expense_money($sum_today_expense, $selectedCurrency)); ?></strong>
+              <span><?php echo expense_h($stat['label']); ?></span>
+              <strong><?php echo expense_h($stat['value']); ?></strong>
             </div>
-            <div class="quick-stat">
-              <span>Yesterday</span>
-              <strong><?php echo expense_h(expense_money($sum_yesterday_expense, $selectedCurrency)); ?></strong>
-            </div>
-            <div class="quick-stat">
-              <span>This Year</span>
-              <strong><?php echo expense_h(expense_money($sum_yearly_expense, $selectedCurrency)); ?></strong>
-            </div>
-            <div class="quick-stat">
-              <span>Active Days</span>
-              <strong><?php echo (int)$activeDays; ?></strong>
-            </div>
-            <div class="quick-stat">
-              <span>Avg / Active Day</span>
-              <strong><?php echo expense_h(expense_money($avgPerActiveDay, $selectedCurrency)); ?></strong>
-            </div>
-            <div class="quick-stat">
-              <span>Vs Last Week</span>
-              <strong><?php echo expense_h($weeklyChangeText); ?></strong>
-            </div>
-            <div class="quick-stat">
-              <span>Vs Last Month</span>
-              <strong><?php echo expense_h($monthlyChangeText); ?></strong>
-            </div>
-          </div>
-        </div>
-
-        <div class="dashboard-card">
-          <h2 class="section-title"><i class="fa fa-history"></i>Latest expense</h2>
-          <p class="section-copy">Most recent entry in <?php echo expense_h($selectedCurrency); ?>.</p>
-          <div class="latest-expense">
-            <?php if ($latestExpense) { ?>
-            <p class="item-name"><?php echo expense_h($latestExpense['ExpenseItem']); ?></p>
-            <p class="item-meta"><?php echo expense_h(expense_money($latestExpense['ExpenseCost'], $selectedCurrency)); ?></p>
-            <p class="item-category"><?php echo expense_h($latestExpense['CategoryName']); ?></p>
-            <p class="item-date"><?php echo expense_h(date('F j, Y', strtotime($latestExpense['ExpenseDate']))); ?></p>
-            <?php if (!empty($latestExpense['CreatedAt'])) { ?>
-            <p class="item-date">Recorded at <?php echo expense_h(date('g:i A', strtotime($latestExpense['CreatedAt']))); ?></p>
-            <?php } ?>
-            <?php } else { ?>
-            <p class="item-name">No expenses yet</p>
-            <p class="item-meta">Add your first expense to start tracking.</p>
             <?php } ?>
           </div>
         </div>
@@ -488,6 +439,25 @@ $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_m
           <?php } else { ?>
           <p class="empty-state">No category data yet for this month.</p>
           <?php } ?>
+        </div>
+
+        <div class="dashboard-card">
+          <h2 class="section-title"><i class="fa fa-history"></i>Latest expense</h2>
+          <p class="section-copy">Most recent entry in <?php echo expense_h($selectedCurrency); ?>.</p>
+          <div class="latest-expense">
+            <?php if ($latestExpense) { ?>
+            <p class="item-name"><?php echo expense_h($latestExpense['ExpenseItem']); ?></p>
+            <p class="item-meta"><?php echo expense_h(expense_money($latestExpense['ExpenseCost'], $selectedCurrency)); ?></p>
+            <p class="item-category"><?php echo expense_h($latestExpense['CategoryName']); ?></p>
+            <p class="item-date"><?php echo expense_h(date('F j, Y', strtotime($latestExpense['ExpenseDate']))); ?></p>
+            <?php if (!empty($latestExpense['CreatedAt'])) { ?>
+            <p class="item-date">Recorded at <?php echo expense_h(date('g:i A', strtotime($latestExpense['CreatedAt']))); ?></p>
+            <?php } ?>
+            <?php } else { ?>
+            <p class="item-name">No expenses yet</p>
+            <p class="item-meta">Add your first expense to start tracking.</p>
+            <?php } ?>
+          </div>
         </div>
       </div>
 
@@ -540,6 +510,7 @@ $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_m
         <div class="dashboard-card">
           <h2 class="section-title"><i class="fa fa-exchange"></i>Totals by currency</h2>
           <p class="section-copy">Useful if you track expenses in more than one currency.</p>
+          <?php if (count($currencyTotalsUsed) > 0) { ?>
           <div class="table-responsive">
             <table class="table currency-table">
               <thead>
@@ -549,7 +520,7 @@ $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_m
                 </tr>
               </thead>
               <tbody>
-                <?php foreach ($currencyTotals as $currency => $total) { ?>
+                <?php foreach ($currencyTotalsUsed as $currency => $total) { ?>
                 <tr>
                   <td><?php echo expense_h($currency); ?></td>
                   <td><?php echo expense_h(expense_money($total, $currency)); ?></td>
@@ -558,6 +529,9 @@ $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_m
               </tbody>
             </table>
           </div>
+          <?php } else { ?>
+          <p class="empty-state">No expenses recorded yet.</p>
+          <?php } ?>
         </div>
       </div>
     </div>
