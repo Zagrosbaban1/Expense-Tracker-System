@@ -9,9 +9,9 @@ if (!function_exists('expense_currency_symbol')) {
   function expense_currency_symbol($currency) {
     $symbols = array(
       'USD' => '$',
-      'EUR' => 'EUR',
+      'EUR' => '€',
       'IQD' => 'IQD',
-      'GBP' => 'GBP',
+      'GBP' => '£',
       'AED' => 'AED',
       'SAR' => 'SAR'
     );

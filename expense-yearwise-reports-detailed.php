@@ -21,6 +21,9 @@ if (strlen($_SESSION['detsuid']==0)) {
   $fromDate = '';
   $toDate = '';
   $exportLink = '';
+  $categoryRows = array();
+  $categoryLabels = array();
+  $categoryValues = array();
 
   $currencyColumn = mysqli_query($con, "SHOW COLUMNS FROM tblexpense LIKE 'Currency'");
   if (mysqli_num_rows($currencyColumn) == 0) {
@@ -43,6 +46,7 @@ if (strlen($_SESSION['detsuid']==0)) {
     }
 
     $recordCount = count($rows);
+    $avgPeriodValue = $recordCount > 0 ? $totalExpense / $recordCount : 0;
     if ($recordCount > 0) {
       $topPeriodValue = max($values);
       foreach ($rows as $row) {
@@ -59,6 +63,15 @@ if (strlen($_SESSION['detsuid']==0)) {
       'currency' => $currency,
       'export' => 'csv'
     ));
+
+    $catQuery = mysqli_query($con, "SELECT COALESCE(c.CategoryName, 'Uncategorized') as catname, SUM(e.ExpenseCost) as totalamount FROM tblexpense e LEFT JOIN tblcategories c ON e.CategoryId = c.ID WHERE e.UserId='$userid' AND e.Currency='$currency' AND e.ExpenseDate BETWEEN '$fromDate' AND '$toDate' GROUP BY e.CategoryId, c.CategoryName ORDER BY totalamount DESC");
+    if ($catQuery) {
+      while ($catRow = mysqli_fetch_array($catQuery)) {
+        $categoryRows[] = $catRow;
+        $categoryLabels[] = $catRow['catname'] ? $catRow['catname'] : 'Uncategorized';
+        $categoryValues[] = (float)$catRow['totalamount'];
+      }
+    }
   }
 
   if ($msg == '' && isset($_GET['export']) && $_GET['export'] === 'csv') {
@@ -110,6 +123,11 @@ if (strlen($_SESSION['detsuid']==0)) {
       .metric-value { font-size: 22px; }
       .chart-box { height: 240px; }
     }
+    @media print {
+      #sidebar-collapse, .toolbar-link { display: none !important; }
+      .report-shell { background: #fff; padding: 0; }
+      .report-block { box-shadow: none; border-color: #ccc; }
+    }
   </style>
 </head>
 <body>
@@ -120,7 +138,7 @@ if (strlen($_SESSION['detsuid']==0)) {
       <h1 class="report-title">Yearly report</h1>
       <p class="report-subtitle">Range: <strong><?php echo report_h((string)$fromYear); ?></strong> to <strong><?php echo report_h((string)$toYear); ?></strong> in <strong><?php echo report_h($currency); ?></strong></p>
       <a class="toolbar-link btn btn-default" href="expense-yearwise-reports.php?cur=<?php echo report_h($currency); ?>">Change filters</a>
-      <?php if ($msg == '') { ?><a class="toolbar-link btn btn-primary" href="<?php echo report_h($exportLink); ?>">Export CSV</a><?php } ?>
+      <?php if ($msg == '') { ?><a class="toolbar-link btn btn-primary" href="<?php echo report_h($exportLink); ?>">Export CSV</a> <button type="button" class="toolbar-link btn btn-default" onclick="window.print()">Print</button><?php } ?>
       <?php if ($msg != '') { ?>
       <div class="alert-lite"><?php echo report_h($msg); ?></div>
       <?php } ?>
@@ -128,9 +146,10 @@ if (strlen($_SESSION['detsuid']==0)) {
 
     <?php if ($msg == '') { ?>
     <div class="row">
-      <div class="col-sm-4"><div class="report-block metric-card"><p class="metric-label">Total</p><h3 class="metric-value"><?php echo report_money($totalExpense, $currency); ?></h3></div></div>
-      <div class="col-sm-4"><div class="report-block metric-card"><p class="metric-label">Years</p><h3 class="metric-value"><?php echo $recordCount; ?></h3></div></div>
-      <div class="col-sm-4"><div class="report-block metric-card"><p class="metric-label">Highest Year</p><h3 class="metric-value"><?php echo report_money($topPeriodValue, $currency); ?></h3><p class="report-subtitle"><?php echo $topPeriodLabel; ?></p></div></div>
+      <div class="col-sm-6 col-md-3"><div class="report-block metric-card"><p class="metric-label">Total</p><h3 class="metric-value"><?php echo report_money($totalExpense, $currency); ?></h3></div></div>
+      <div class="col-sm-6 col-md-3"><div class="report-block metric-card"><p class="metric-label">Years</p><h3 class="metric-value"><?php echo $recordCount; ?></h3></div></div>
+      <div class="col-sm-6 col-md-3"><div class="report-block metric-card"><p class="metric-label">Highest Year</p><h3 class="metric-value"><?php echo report_money($topPeriodValue, $currency); ?></h3><p class="report-subtitle"><?php echo $topPeriodLabel; ?></p></div></div>
+      <div class="col-sm-6 col-md-3"><div class="report-block metric-card"><p class="metric-label">Avg / Year</p><h3 class="metric-value"><?php echo report_money($avgPeriodValue, $currency); ?></h3></div></div>
     </div>
 
     <div class="row">
@@ -182,6 +201,34 @@ if (strlen($_SESSION['detsuid']==0)) {
         </table>
       </div>
     </div>
+
+    <?php if (count($categoryRows) > 0) { ?>
+    <div class="report-block">
+      <h3 class="metric-label">By Category</h3>
+      <div class="row">
+        <div class="col-md-5">
+          <div class="chart-box" id="catPieChartWrap" style="height:260px"><canvas id="catPieChart"></canvas></div>
+        </div>
+        <div class="col-md-7">
+          <div class="table-responsive">
+            <table class="table table-clean">
+              <thead><tr><th>Category</th><th>Total</th><th>%</th></tr></thead>
+              <tbody>
+                <?php foreach ($categoryRows as $catRow) { ?>
+                <tr>
+                  <td><?php echo report_h($catRow['catname']); ?></td>
+                  <td><?php echo report_money($catRow['totalamount'], $currency); ?></td>
+                  <td><?php echo $totalExpense > 0 ? number_format(((float)$catRow['totalamount'] / $totalExpense) * 100, 1) : '0.0'; ?>%</td>
+                </tr>
+                <?php } ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <?php } ?>
+
     <?php } ?>
   </div>
   <script src="js/jquery-1.11.1.min.js"></script>
@@ -270,6 +317,20 @@ if (strlen($_SESSION['detsuid']==0)) {
         scaleFontSize: isMobile ? 10 : 12,
         scaleOverride: false
       });
+    })();
+
+    (function () {
+      var catLabels = <?php echo json_encode($categoryLabels); ?>;
+      var catValues = <?php echo json_encode($categoryValues); ?>;
+      if (!catLabels.length) return;
+      var palette = ["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899","#06b6d4","#84cc16","#f97316","#6366f1"];
+      var catData = catLabels.map(function (label, i) {
+        return { value: catValues[i], color: palette[i % palette.length], highlight: palette[i % palette.length], label: label };
+      });
+      var catCanvas = document.getElementById("catPieChart");
+      if (catCanvas) {
+        new Chart(catCanvas.getContext("2d")).Doughnut(catData, { responsive: true, segmentShowStroke: false, animateScale: true });
+      }
     })();
   </script>
 </body>
