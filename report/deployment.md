@@ -1,30 +1,22 @@
 ---
 title: Deployment
+has_children: false
 nav_order: 8
 ---
 
 # Deployment
 
-## Deployment Environment
+Since the application is a PHP and MySQL project, deployment means placing the source onto a machine that runs Apache, PHP, and MySQL. The simplest environment for this is **XAMPP**, which bundles all three. The steps below take a fresh copy of the project to a running site:
 
-The application is designed for deployment on a local Apache and MySQL environment such as XAMPP.
+1. Install XAMPP — download and install XAMPP on the target computer, then start the **Apache** and **MySQL** services from its control panel.
+2. Place the project — copy the project folder into XAMPP's `htdocs` directory (for example `C:\xampp\htdocs\Expense-Tracker-System`), or unzip the release artifact there.
+3. Create the database — using phpMyAdmin, create a database named `detsdb` and import `database.sql` to build the schema. Optionally import one of the `seed-*.sql` files to load demonstration data.
+4. Check the connection — confirm that the credentials in `includes/dbconnection.php` match the local MySQL settings (by default, user `root` with an empty password on `localhost`).
+5. Run the application — open `http://localhost/Expense-Tracker-System/` in a browser, then register an account and start using the system.
 
-## Deployment Steps
+Requirements:
+- Server stack — Apache, PHP 7.4 or higher, and MySQL/MariaDB, all provided by XAMPP.
+- File uploads — the environment must allow file uploads, because receipts are stored inside the project's `uploads/receipts/` folder, which is created automatically when the first receipt is saved.
+- Schema maintenance — several tables and columns are created automatically by the helper functions the first time a relevant page is opened, so a partially set-up database will complete itself on first use.
 
-1. Install XAMPP on the target computer.
-2. Copy the project folder into the `htdocs` directory.
-3. Start Apache and MySQL from the XAMPP control panel.
-4. Create the required MySQL database.
-5. Update the database connection in `includes/dbconnection.php` if needed.
-6. Import the base database structure if an SQL file is available.
-7. Open the project in a browser using `http://localhost/Expense-Tracker-System/`.
-
-## Deployment Notes
-
-- Some additional tables and columns are created automatically by helper functions when relevant pages are opened.
-- Uploaded receipts are stored inside the project folder, so the deployment environment must allow file uploads.
-- The report site itself can be deployed separately through GitHub Pages using the repository workflow.
-
-## Local Use Case
-
-This deployment model is suitable for demonstration, lab presentation, and personal portfolio use because it requires only a local PHP and MySQL setup.
+The report site itself is deployed separately: a GitHub Actions workflow builds the `report/` folder with Jekyll and publishes it to GitHub Pages, independently of the application deployment described above.

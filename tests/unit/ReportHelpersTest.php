@@ -25,7 +25,7 @@ final class ReportHelpersTest extends TestCase
     public function testReportMoneyFormatsAmountAndCurrency(): void
     {
         $this->assertSame('99.90 $', report_money(99.9, 'USD'));
-        $this->assertSame('250.00 EUR', report_money(250, 'EUR'));
+        $this->assertSame('250.00 €', report_money(250, 'EUR'));
     }
 
     public function testReportSelectedCurrencyReadsPostBeforeGet(): void

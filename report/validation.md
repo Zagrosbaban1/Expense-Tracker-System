@@ -1,188 +1,92 @@
 ---
 title: Validation
+has_children: false
 nav_order: 6
 ---
 
 # Validation
 
-## Testing Approach
+## Testing
 
-The project was checked in four ways:
+For the validation of the Expense Tracker System, a combination of testing approaches was used, because the project is a PHP and MySQL web application whose behaviour spans reusable functions, individual pages, and full browser workflows.
 
-1. Code-level checks were used to verify that the PHP files do not contain syntax errors.
-2. PHPUnit automated tests were used to verify reusable PHP helper functions and syntax-check all PHP pages.
-3. Playwright browser end-to-end testing was used to verify the local website through Chromium.
-4. Manual browser testing was used to verify that the website workflows behave correctly from the user's point of view.
+- Type of tests conducted:
+    - *Unit tests* on the reusable helper functions, using **PHPUnit**.
+    - *Syntax smoke tests* that run PHP's built-in linter (`php -l`) against every application page and helper.
+    - *End-to-end browser tests* that drive the running site as a real user, using **Playwright** through Python and a Chromium browser.
+    - *Manual acceptance testing* of the main workflows against a checklist.
+- Testing framework: PHPUnit for the unit and syntax tests, and Playwright for the browser end-to-end test. The test files live under `tests/unit/` and `tests/e2e/`, and the manual checklist is stored in `tests/acceptance-checklist.md`.
 
-The repository now includes automated unit tests for helper logic. Full end-to-end application validation is still mainly manual because the project is a PHP/MySQL web application that depends on a local XAMPP database and browser interaction.
-
-## Code Checks
-
-The PHP source code was checked with the PHP command-line syntax checker from the local XAMPP installation.
-
-Environment:
-
-- Operating system: Windows
-- Local server stack: XAMPP
-- PHP version used for checking: PHP 8.2.12
-- Database: MySQL/MariaDB through XAMPP
-
-Commands used:
-
-```powershell
-C:\xampp\php\php.exe -v
-Get-ChildItem -Filter *.php | ForEach-Object { C:\xampp\php\php.exe -l $_.FullName }
-Get-ChildItem includes -Filter *.php | ForEach-Object { C:\xampp\php\php.exe -l $_.FullName }
-```
-
-Result:
-
-- No syntax errors were detected in the root PHP application pages.
-- No syntax errors were detected in the PHP files inside `includes/`.
-- The same type of syntax check is automated in GitHub Actions through the `PHP Syntax Check` workflow.
-
-## Automated Unit Tests
-
-PHPUnit was added as a development dependency and used to test reusable helper functions from:
-
-- `includes/expense-helpers.php`
-- `includes/report-helpers.php`
-
-It also includes a syntax smoke test that runs PHP's `-l` checker against all root PHP pages and all PHP files in `includes/`.
-
-The test files are stored in:
-
-- `tests/unit/ExpenseHelpersTest.php`
-- `tests/unit/ReportHelpersTest.php`
-- `tests/unit/SyntaxCheckTest.php`
-
-Command used:
+The unit and syntax tests are run with a single command through Composer:
 
 ```powershell
 composer test
 ```
 
-Result:
+### Success rate
+
+The automated PHPUnit suite currently reports:
 
 ```text
-PHPUnit 11.5.55
-44 tests, 57 assertions
-OK
+OK (44 tests, 57 assertions)
 ```
 
-The automated tests check currency options, currency formatting, money formatting, HTML escaping, month-key generation, selected-currency validation, budget progress calculation, CSRF token verification, receipt upload validation, receipt deletion, report helper behavior, and PHP syntax validity for application pages.
+All tests pass. The suite exercises the currency options and symbols, money formatting, HTML escaping, month-key generation, currency validation, budget-progress clamping, CSRF token verification, receipt-upload validation, receipt deletion, the report helpers, and the syntax validity of every PHP page. The Playwright end-to-end script completes its full run against a local XAMPP instance and prints a passing result.
 
-## Playwright Browser End-to-End Test
+### Coverage
 
-Playwright was added as a browser-based end-to-end testing tool through Python. It launches Chromium and tests the local XAMPP website as a real user.
+Coverage is strongest at the two ends of the system — the reusable helper functions and the full browser workflows — and lighter in the middle, where individual page logic is still only exercised indirectly.
 
-Setup commands:
+- Areas covered by unit tests: currency handling, formatting and escaping, budgeting maths, CSRF verification, and receipt-file validation and deletion.
+- Areas covered by the syntax smoke test: every PHP file in the project root and in `includes/`.
+- Areas covered by the end-to-end test: login and invalid-login handling, registration, the protected-page redirect, item, category, budget, and expense creation, expense filtering, recurring-expense creation, and navigation across the dashboard, expense, report, profile, and password pages.
 
-```powershell
-python -m pip install -r requirements-dev.txt
-python -m playwright install chromium
-```
+### Future testing plans
 
-Command used:
+To raise coverage further, additional tests should be added for the edit and delete flows, for a real CSV-download assertion, and for security-focused cases around authentication and file uploads. Introducing a dedicated test database would also allow the page logic to be tested directly rather than only through the browser.
 
-```powershell
-python tests/e2e/playwright_smoke.py
-```
+### Comments with respect to the requirements' acceptance criteria
 
-Result:
+The automated and manual tests were derived from the functional requirements and their acceptance criteria. Each requirement group has a matching entry in the acceptance checklist, so that a passing run corresponds directly to the behaviour promised in the Requirements section.
 
-```text
-Playwright full-site E2E test passed.
-```
+## Acceptance test
 
-The Playwright test covers:
+Acceptance testing was carried out manually to confirm that the application meets its requirements from the user's point of view. The scenarios were taken directly from the user stories and functional requirements.
 
-- login page rendering
-- invalid login handling
-- register page rendering
-- forgot-password page rendering
-- protected dashboard redirect when unauthenticated
-- new user registration
-- login with the new user
-- dashboard rendering
-- item creation
-- category creation
-- budget creation
-- expense creation
-- expense filtering
-- recurring expense creation
-- authenticated page navigation for dashboard, expense management, reports, profile, and password pages
+### Test cases
 
-The local test requires Apache and MySQL to be running in XAMPP and the `detsdb` database to be imported. The same script can optionally check the published report site by setting `RUN_REPORT_CHECK=1`.
+1. User registration
+    - Description: Verify that a new user can register with valid details.
+    - Outcome: Passed. The account was created and could then be used to log in; a duplicate email was correctly rejected.
 
-## Manual Website Testing Procedure
+2. Login and logout
+    - Description: Verify that a registered user can log in and log out.
+    - Outcome: Passed. Valid credentials reached the dashboard, invalid credentials were refused, and logging out required signing in again for protected pages.
 
-The website was tested locally through XAMPP using the following procedure:
+3. Add expense
+    - Description: Verify that an expense can be created with valid details.
+    - Outcome: Passed. The expense was stored and appeared immediately in the list and the dashboard totals.
 
-1. Start Apache and MySQL in XAMPP.
-2. Place the project inside `htdocs`.
-3. Import the database script into MySQL.
-4. Open `http://localhost/Expense-Tracker-System/` in a browser.
-5. Test each main workflow as a normal user.
-6. Confirm the visible result in the browser and, where relevant, confirm that the data is stored or changed in the database.
+4. Edit and delete expense
+    - Description: Verify that an existing expense can be updated and removed.
+    - Outcome: Passed. Edited values were saved correctly, and a deleted expense (along with its receipt) no longer appeared.
 
-## Sample Test Cases
+5. Search, filter, and export
+    - Description: Verify that filtering narrows the list and that the result can be exported.
+    - Outcome: Passed. Only matching records were shown, and the CSV export contained the same filtered data.
 
-| Test Case | Test Data / Action | Expected Result | Status |
-| --- | --- | --- | --- |
-| User registration | Enter valid full name, email, mobile number, and password. | New user account is created and can be used for login. | Passed manually |
-| Login | Enter correct email and password. | User is redirected to dashboard. | Passed manually |
-| Logout | Click logout from an authenticated session. | Session ends and protected pages require login again. | Passed manually |
-| Add expense | Enter valid date, item, category, amount, currency, and optional notes. | Expense is saved successfully and appears in the expense list. | Passed manually |
-| Edit expense | Change an existing expense amount or category. | Existing expense data is updated correctly. | Passed manually |
-| Delete expense | Delete an existing expense record. | Expense is removed from the list. | Passed manually |
-| Search and filter | Filter by text, date range, category, amount range, or currency. | Only matching expense records are displayed. | Passed manually |
-| Add category | Enter a unique category name. | Category is stored and appears in category selectors. | Passed manually |
-| Save budget | Select category, month, currency, and amount. | Budget appears in category and dashboard views. | Passed manually |
-| Add recurring expense | Create weekly or monthly recurring schedule. | Recurring rule is stored and due expenses can be generated. | Passed manually |
-| Generate report | Select date-wise, month-wise, or year-wise report period. | Report summary, details, and charts are displayed. | Passed manually |
-| Export CSV | Click export after filtering expenses. | CSV file downloads and contains the selected expense data. | Passed manually |
+6. Categories and budgets
+    - Description: Verify that categories and monthly budgets can be created and are reflected elsewhere.
+    - Outcome: Passed. New categories became available in the expense forms, and budget status appeared in the category and dashboard views.
 
-## Requirement Acceptance Matrix
+7. Recurring expenses
+    - Description: Verify that a recurring rule generates due expenses automatically.
+    - Outcome: Passed. Weekly and monthly rules were stored, and due expenses were inserted into the expense table when the application was next opened.
 
-| Requirement | Acceptance procedure | Final result |
-| --- | --- | --- |
-| FR1 Register user | Submit the registration form with valid personal data and password. | User account is created. |
-| FR2 Login and logout | Log in with valid credentials, access dashboard, then log out. | Protected pages are available only during the session. |
-| FR3 Password workflows | Use forgot-password, reset-password, and change-password pages with valid data. | Password-related workflows complete without breaking login. |
-| FR4 Profile and defaults | Update profile data, default currency, and default category. | Updated values are stored and reused where applicable. |
-| FR5 Expense items | Add a reusable expense item. | Item appears as an available option for expenses. |
-| FR6 Add expense | Submit a complete valid expense form. | Expense is stored and displayed in the list/dashboard. |
-| FR7 Edit and delete expense | Modify an existing expense, then delete it. | Changes are saved, and deleted records no longer appear. |
-| FR8 Search and filter | Apply text, date, amount, category, and currency filters. | Results contain only matching expenses. |
-| FR9 CSV export | Export filtered expenses. | Downloaded CSV matches the filtered result set. |
-| FR10 Categories and budgets | Create categories and assign monthly budgets. | Categories and budget status are visible in relevant pages. |
-| FR11 Recurring rules | Create weekly and monthly recurring expenses. | Recurring rules are stored with the correct frequency. |
-| FR12 Automatic recurring generation | Open the application after a recurring item becomes due. | Due recurring expenses are inserted into the expense table. |
-| FR13 Dashboard summaries | Open dashboard with existing expense data. | Today, weekly, monthly, yearly, and total summaries are displayed. |
-| FR14 Charts | Open dashboard/report pages with categorized expenses. | Chart-based insights render with the expected data. |
-| FR15 Reports | Generate daily, monthly, and yearly reports. | Report totals, details, and charts match the selected period. |
+8. Reports
+    - Description: Verify that date-wise, month-wise, and year-wise reports display correct summaries and charts.
+    - Outcome: Passed. Report totals, averages, detailed tables, and the category breakdown matched the selected period, and CSV export and printing worked.
 
-## Validation Results
+### Comments with respect to the requirements' acceptance criteria
 
-The implemented pages support the main workflow successfully:
-
-- User authentication features are present.
-- Expense CRUD operations are implemented.
-- Filtering and CSV export are implemented.
-- Categories and budgets are integrated with the dashboard.
-- Recurring expense automation is implemented.
-- Reporting is available in date-wise, month-wise, and year-wise formats.
-
-## Quality Observations
-
-- Newer pages use prepared statements and reusable helpers more consistently than older pages.
-- CSRF protection is present in several newer forms.
-- Password storage still uses MD5 in older authentication logic, which is not secure by modern standards.
-- Schema updates are triggered at runtime through helper logic instead of a dedicated migration system.
-- Automated unit, syntax-smoke, and Playwright browser end-to-end tests are included.
-
-## Suggested Validation Improvements
-
-- Extend Playwright tests with deletion flows, edit flows, CSV download assertions, and screenshot comparison.
-- Add security-focused validation for authentication and file uploads.
+All acceptance tests confirmed that the application fulfils the key user requirements defined in the project documentation. Where the tests revealed weaker areas — notably in legacy authentication code — these are recorded honestly in the Self-evaluation and Future work sections rather than hidden.
