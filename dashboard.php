@@ -47,6 +47,14 @@ function dashboard_change_text($current, $previous) {
   return $prefix . number_format($percent, 0) . '%';
 }
 
+// Direction of a change label, used to colour the trend chips.
+// For spending, less than before is "good" (green), more is "up" (red).
+function dashboard_delta_class($text) {
+  if ($text === '' || $text === 'No change') return 'flat';
+  if ($text === 'New activity') return 'up';
+  return strpos($text, '-') === 0 ? 'down' : 'up';
+}
+
 $sum_last_24_hours_expense = dashboard_scalar($con, "SELECT SUM(ExpenseCost) AS total FROM tblexpense WHERE UserId=? AND Currency=? AND CreatedAt BETWEEN DATE_SUB(NOW(), INTERVAL 24 HOUR) AND NOW()", 'is', array($userid, $selectedCurrency), 'total');
 $sum_today_expense = dashboard_scalar($con, "SELECT SUM(ExpenseCost) AS total FROM tblexpense WHERE UserId=? AND Currency=? AND ExpenseDate=?", 'iss', array($userid, $selectedCurrency, $today), 'total');
 $sum_yesterday_expense = dashboard_scalar($con, "SELECT SUM(ExpenseCost) AS total FROM tblexpense WHERE UserId=? AND Currency=? AND ExpenseDate=?", 'iss', array($userid, $selectedCurrency, $yesterday), 'total');
@@ -225,10 +233,24 @@ $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_m
     .currency-form .form-control { background: rgba(255, 255, 255, 0.94); color: #0f172a; }
     .currency-form .btn { background: #fff; color: #1d4ed8; font-weight: 700; }
     .dashboard-card { padding: 22px; margin-bottom: 22px; }
-    .metric-card { padding: 20px; margin-bottom: 20px; }
+    .metric-card { padding: 20px; margin-bottom: 20px; position: relative; overflow: hidden; }
+    .metric-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 4px 0 0 4px; background: var(--accent, #2563eb); }
+    .metric-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .metric-icon { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; background: var(--accent, #2563eb); box-shadow: 0 8px 18px rgba(37, 99, 235, 0.28); }
+    .metric-chip { font-size: 11px; font-weight: 800; padding: 4px 9px; border-radius: 999px; white-space: nowrap; letter-spacing: .02em; }
+    .metric-chip.up { background: #fee2e2; color: #b91c1c; }
+    .metric-chip.down { background: #dcfce7; color: #166534; }
+    .metric-chip.flat { background: #f1f5f9; color: #475569; }
     .metric-label { margin: 0 0 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #64748b; }
-    .metric-value { margin: 0; font-size: 28px; font-weight: 700; color: #0f172a; }
+    .metric-value { margin: 0; font-size: 28px; font-weight: 700; color: #0f172a; letter-spacing: -.01em; }
     .metric-note { margin-top: 10px; color: #64748b; font-size: 13px; }
+    .accent-blue { --accent: #2563eb; } .accent-teal { --accent: #0d9488; } .accent-indigo { --accent: #6366f1; } .accent-slate { --accent: #475569; }
+    .accent-teal .metric-icon { box-shadow: 0 8px 18px rgba(13, 148, 136, 0.28); }
+    .accent-indigo .metric-icon { box-shadow: 0 8px 18px rgba(99, 102, 241, 0.28); }
+    .accent-slate .metric-icon { box-shadow: 0 8px 18px rgba(71, 85, 105, 0.26); }
+    .dashboard-card, .metric-card { transition: transform .18s ease, box-shadow .18s ease; }
+    .dashboard-card:hover, .metric-card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(15, 23, 42, 0.10); }
+    .section-title .fa { margin-right: 8px; color: #2563eb; }
     .section-title { margin: 0 0 6px; font-size: 18px; font-weight: 700; color: #0f172a; }
     .section-copy { margin: 0 0 18px; color: #64748b; font-size: 13px; }
     .chart-box { position: relative; height: 320px; width: 100%; overflow: hidden; }
@@ -320,28 +342,42 @@ $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_m
 
     <div class="row">
       <div class="col-sm-6 col-lg-3">
-        <div class="dashboard-card metric-card">
+        <div class="dashboard-card metric-card accent-blue">
+          <div class="metric-top">
+            <span class="metric-icon"><i class="fa fa-clock-o"></i></span>
+          </div>
           <p class="metric-label">Last 24 Hours</p>
           <h3 class="metric-value"><?php echo expense_h(expense_money($sum_last_24_hours_expense, $selectedCurrency)); ?></h3>
           <p class="metric-note"><?php echo expense_h($last24HoursLabel); ?></p>
         </div>
       </div>
       <div class="col-sm-6 col-lg-3">
-        <div class="dashboard-card metric-card">
+        <div class="dashboard-card metric-card accent-teal">
+          <div class="metric-top">
+            <span class="metric-icon"><i class="fa fa-calendar-o"></i></span>
+            <span class="metric-chip <?php echo dashboard_delta_class($weeklyChangeText); ?>"><?php echo expense_h($weeklyChangeText); ?></span>
+          </div>
           <p class="metric-label">Last 7 Days</p>
           <h3 class="metric-value"><?php echo expense_h(expense_money($sum_weekly_expense, $selectedCurrency)); ?></h3>
-          <p class="metric-note">Rolling weekly total</p>
+          <p class="metric-note">vs previous 7 days</p>
         </div>
       </div>
       <div class="col-sm-6 col-lg-3">
-        <div class="dashboard-card metric-card">
+        <div class="dashboard-card metric-card accent-indigo">
+          <div class="metric-top">
+            <span class="metric-icon"><i class="fa fa-line-chart"></i></span>
+            <span class="metric-chip <?php echo dashboard_delta_class($monthlyChangeText); ?>"><?php echo expense_h($monthlyChangeText); ?></span>
+          </div>
           <p class="metric-label">This Month</p>
           <h3 class="metric-value"><?php echo expense_h(expense_money($sum_monthly_expense, $selectedCurrency)); ?></h3>
-          <p class="metric-note">Current month total</p>
+          <p class="metric-note">vs previous month</p>
         </div>
       </div>
       <div class="col-sm-6 col-lg-3">
-        <div class="dashboard-card metric-card">
+        <div class="dashboard-card metric-card accent-slate">
+          <div class="metric-top">
+            <span class="metric-icon"><i class="fa fa-money"></i></span>
+          </div>
           <p class="metric-label">Total</p>
           <h3 class="metric-value"><?php echo expense_h(expense_money($sum_total_expense, $selectedCurrency)); ?></h3>
           <p class="metric-note">All records in <?php echo expense_h($selectedCurrency); ?></p>
@@ -352,7 +388,7 @@ $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_m
     <div class="row">
       <div class="col-md-8">
         <div class="dashboard-card">
-          <h2 class="section-title">Daily trend</h2>
+          <h2 class="section-title"><i class="fa fa-line-chart"></i>Daily trend</h2>
           <p class="section-copy">Your spending pattern across <?php echo expense_h($selectedMonthLabel); ?>.</p>
           <div class="chart-box">
             <canvas id="dailyTrendChart"></canvas>
@@ -361,7 +397,7 @@ $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_m
       </div>
       <div class="col-md-4">
         <div class="dashboard-card">
-          <h2 class="section-title">Quick stats</h2>
+          <h2 class="section-title"><i class="fa fa-bolt"></i>Quick stats</h2>
           <p class="section-copy">Signals that help you read the month faster.</p>
           <div class="quick-grid">
             <div class="quick-stat">
@@ -396,7 +432,7 @@ $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_m
         </div>
 
         <div class="dashboard-card">
-          <h2 class="section-title">Latest expense</h2>
+          <h2 class="section-title"><i class="fa fa-history"></i>Latest expense</h2>
           <p class="section-copy">Most recent entry in <?php echo expense_h($selectedCurrency); ?>.</p>
           <div class="latest-expense">
             <?php if ($latestExpense) { ?>
@@ -419,7 +455,7 @@ $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_m
     <div class="row">
       <div class="col-md-5">
         <div class="dashboard-card">
-          <h2 class="section-title">Top categories</h2>
+          <h2 class="section-title"><i class="fa fa-pie-chart"></i>Top categories</h2>
           <p class="section-copy">Highest spending categories this month.</p>
           <?php if (count($topCategorySegments) > 0) { ?>
           <div class="donut-card">
@@ -457,7 +493,7 @@ $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_m
 
       <div class="col-md-7">
         <div class="dashboard-card">
-          <h2 class="section-title">Budget tracker</h2>
+          <h2 class="section-title"><i class="fa fa-tachometer"></i>Budget tracker</h2>
           <p class="section-copy">Monthly category budgets for <?php echo expense_h($selectedMonthLabel); ?> in <?php echo expense_h($selectedCurrency); ?>.</p>
 
           <div class="budget-summary">
@@ -502,7 +538,7 @@ $monthlyChangeText = dashboard_change_text($sum_monthly_expense, $sum_previous_m
     <div class="row">
       <div class="col-md-12">
         <div class="dashboard-card">
-          <h2 class="section-title">Totals by currency</h2>
+          <h2 class="section-title"><i class="fa fa-exchange"></i>Totals by currency</h2>
           <p class="section-copy">Useful if you track expenses in more than one currency.</p>
           <div class="table-responsive">
             <table class="table currency-table">
