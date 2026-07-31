@@ -6,16 +6,18 @@ nav_order: 2
 
 # Concept
 
-The product developed in this project is a web application, accessed through a browser, that presents a Graphical User Interface (GUI) for managing personal expenses. The application allows an authenticated user to interact with their own set of financial records, where they can add, view, edit, categorise, and analyse the money they spend.
+What I built is a web application, used through a browser, that gives a Graphical User Interface (GUI) for managing personal expenses. Once a user is logged in, they work only with their own financial records: adding them, reading them back, correcting them, grouping them into categories, and analysing them.
 
 **Key characteristics** of the product:
-- *Platform*: Server-side web application, built with PHP and served by Apache on a XAMPP stack, using a MySQL database for persistence.
-- *User interface*: A browser-based GUI that combines form pages (for entering expenses, categories, budgets, and recurring rules) with a dashboard and report pages that display tables and charts.
-- *Functionality*: The application provides the core expense functions of creating, updating, and deleting records, and extends them with categories, monthly budgets, recurring payments, receipt attachments, multi-currency support, CSV export, and reporting by day, month, and year.
+- *Platform*: a server-side web application written in PHP, served by Apache on a XAMPP stack, with MySQL for persistence.
+- *User interface*: a browser GUI that mixes form pages (expenses, categories, budgets, recurring rules) with a dashboard and report pages built from tables and charts.
+- *Functionality*: the usual create, update, and delete operations on expenses, extended with categories, monthly budgets, recurring payments, receipt attachments, more than one currency, CSV export, and reporting by day, month, and year.
 
-The primary goal is to give a single user a private and organised place to keep their spending, and to turn those raw entries into readable summaries that support everyday financial decisions.
+The goal I set was to give one user a private, organised place to keep their spending, and then to do something useful with those entries rather than just storing them.
 
 ## Use case collection
+
+The use cases below describe the system from the user's side rather than the code's, and they are what the acceptance tests in the Validation chapter were built from.
 
 **1. Create an account**
 - Actor: New user

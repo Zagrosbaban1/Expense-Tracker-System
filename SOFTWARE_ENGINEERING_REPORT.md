@@ -1,5 +1,7 @@
 ﻿# Expense Tracker System
 
+> **Note.** This file is an early single-page draft. The current report is the site under [`report/`](report/), which is the version published to GitHub Pages and the one that should be read. This draft is kept only for history and is no longer updated chapter by chapter.
+
 ## Home
 
 ### Project Title
@@ -219,7 +221,7 @@ The reporting module summarizes expense totals by day, month, and year. Each rep
 ## Validation
 
 ### Testing Approach
-The project does not include automated unit or integration tests in the repository, so validation is mainly manual. Manual testing can still be structured around core workflows.
+Validation combines automated and manual testing. The repository includes a PHPUnit suite under `tests/unit/` (44 tests, 57 assertions, all passing), a Playwright browser end-to-end script under `tests/e2e/`, and a manual acceptance checklist in `tests/acceptance-checklist.md`. The manual checklist is structured around the core workflows listed below.
 
 ### Sample Test Cases
 
@@ -250,7 +252,7 @@ The project shows practical functionality, but validation also reveals areas for
 - Some pages use prepared statements, while older pages still use direct SQL queries.
 - Passwords are stored using MD5, which is not secure by modern standards.
 - Schema migration logic is triggered at runtime from helper functions instead of using dedicated migration scripts.
-- The project has no automated test suite.
+- The automated tests cover the helper functions and the main browser flow, but not the logic inside individual pages.
 
 ## Release
 
@@ -299,16 +301,15 @@ The repository includes GitHub Actions workflows for packaging and report-site p
   Validates Composer configuration and installs Composer dependencies in CI. The project currently defines `composer.json`, while `composer.lock` is generated only after dependency installation.
 
 ### Assessment
-The project has an initial CI/CD setup for packaging and documentation publishing. However, the application pipeline is not yet fully aligned with the current codebase because:
+The project has a CI/CD setup covering linting, dependency validation, packaging, and documentation publishing. The pipeline is not yet fully aligned with the codebase because:
 
-- there is no automated test suite for the PHP application,
-- there is no Composer project file in the repository,
+- the PHPUnit suite exists but is not executed in CI (the step is still commented out in `php.yml`),
 - there is no database migration or seed step in CI,
 - there are no smoke tests for deployed behavior.
 
 ### Recommended Improvements
-- Add a real PHP linting and syntax-check workflow for all application files.
-- Add unit and integration tests for important business flows.
+- Run the existing PHPUnit suite inside the pipeline so that a failing test blocks a change.
+- Extend the tests to the edit, delete, and CSV-export flows.
 - Add database setup scripts for CI validation.
 - Introduce environment-based configuration for production use.
 - Keep GitHub Pages deployment for documentation and final report publishing.
@@ -416,7 +417,7 @@ This page stores and updates user information such as name, email, mobile number
 - Security is inconsistent across the codebase.
 - Password hashing uses MD5 instead of stronger modern hashing algorithms.
 - Some modules still use direct SQL queries, which increase security risk.
-- There is no automated test suite.
+- The automated tests do not yet run in CI, so they cannot block a bad change.
 - There is no formal migration system for schema evolution.
 - The architecture is modular but not fully layered in an enterprise sense.
 
@@ -476,9 +477,9 @@ The project includes an MIT License. This license was selected because it is sim
 The current system is a server-rendered PHP web application and does not provide a separate public Web API. User actions are handled through web pages and form submissions. If a REST API is added in the future, it should be documented with OpenAPI and versioned from the first public release.
 
 ### Testing
-The project currently relies mainly on manual validation. An acceptance checklist is included in `tests/acceptance-checklist.md` and maps important requirements to manual testing procedures.
+Testing combines a PHPUnit suite (`tests/unit/`), a Playwright browser end-to-end script (`tests/e2e/`), and a manual acceptance checklist (`tests/acceptance-checklist.md`) that maps important requirements to manual procedures. The unit and syntax tests run with `composer test`.
 
-Automated unit and integration tests are not yet implemented, so automated coverage is not available. Future testing work should introduce PHPUnit or a similar PHP testing framework, then report coverage results for helper functions, authentication flows, expense management, reporting, and recurring expense logic.
+Coverage is strongest for the helper functions and for the main browser workflow, and weakest for the logic inside individual pages, which is only exercised indirectly. Future testing work should add direct coverage for the authentication flow, the edit and delete paths, and the CSV export, ideally against a dedicated test database.
 
 ### Build
 The repository includes a GitHub Actions workflow for PHP syntax checking. This provides an automatic build-quality check for PHP files on push and pull request events.

@@ -8,14 +8,14 @@ nav_order: 6
 
 ## Testing
 
-For the validation of the Expense Tracker System, a combination of testing approaches was used, because the project is a PHP and MySQL web application whose behaviour spans reusable functions, individual pages, and full browser workflows.
+No single kind of test would have covered this project. Its behaviour is spread across reusable functions, individual pages, and workflows that only make sense in a browser, so I used four approaches together:
 
-- Type of tests conducted:
-    - *Unit tests* on the reusable helper functions, using **PHPUnit**.
-    - *Syntax smoke tests* that run PHP's built-in linter (`php -l`) against every application page and helper.
-    - *End-to-end browser tests* that drive the running site as a real user, using **Playwright** through Python and a Chromium browser.
-    - *Manual acceptance testing* of the main workflows against a checklist.
-- Testing framework: PHPUnit for the unit and syntax tests, and Playwright for the browser end-to-end test. The test files live under `tests/unit/` and `tests/e2e/`, and the manual checklist is stored in `tests/acceptance-checklist.md`.
+- *Unit tests* on the helper functions, written with **PHPUnit**.
+- *Syntax smoke tests* that run PHP's built-in linter (`php -l`) over every page and helper, which catches a parse error in a file I have not opened in the browser yet.
+- *End-to-end browser tests* that drive the running site the way a user would, using **Playwright** from Python against Chromium.
+- *Manual acceptance testing* of the main workflows against a written checklist.
+
+The PHPUnit tests live in `tests/unit/`, the Playwright script in `tests/e2e/`, and the manual checklist in `tests/acceptance-checklist.md`.
 
 The unit and syntax tests are run with a single command through Composer:
 
@@ -25,33 +25,33 @@ composer test
 
 ### Success rate
 
-The automated PHPUnit suite currently reports:
+The PHPUnit suite currently reports:
 
 ```text
 OK (44 tests, 57 assertions)
 ```
 
-All tests pass. The suite exercises the currency options and symbols, money formatting, HTML escaping, month-key generation, currency validation, budget-progress clamping, CSRF token verification, receipt-upload validation, receipt deletion, the report helpers, and the syntax validity of every PHP page. The Playwright end-to-end script completes its full run against a local XAMPP instance and prints a passing result.
+Everything passes. The suite covers the currency options and symbols, money formatting, HTML escaping, month-key generation, currency validation, budget-progress clamping, CSRF token verification, receipt-upload validation, receipt deletion, the report helpers, and the syntax validity of every PHP page. The Playwright script completes its run against a local XAMPP instance and reports a pass.
 
 ### Coverage
 
-Coverage is strongest at the two ends of the system — the reusable helper functions and the full browser workflows — and lighter in the middle, where individual page logic is still only exercised indirectly.
+Coverage is strongest at the two ends of the system, the helper functions and the full browser workflows, and thinnest in the middle, where the logic inside an individual page is only reached indirectly.
 
-- Areas covered by unit tests: currency handling, formatting and escaping, budgeting maths, CSRF verification, and receipt-file validation and deletion.
-- Areas covered by the syntax smoke test: every PHP file in the project root and in `includes/`.
-- Areas covered by the end-to-end test: login and invalid-login handling, registration, the protected-page redirect, item, category, budget, and expense creation, expense filtering, recurring-expense creation, and navigation across the dashboard, expense, report, profile, and password pages.
+- Unit tests: currency handling, formatting and escaping, budgeting maths, CSRF verification, and receipt-file validation and deletion.
+- Syntax smoke test: every PHP file in the project root and in `includes/`.
+- End-to-end test: login and invalid-login handling, registration, the redirect that protects a page from a signed-out visitor, creation of items, categories, budgets and expenses, expense filtering, recurring-expense creation, and navigation across the dashboard, expense, report, profile, and password pages.
 
 ### Future testing plans
 
-To raise coverage further, additional tests should be added for the edit and delete flows, for a real CSV-download assertion, and for security-focused cases around authentication and file uploads. Introducing a dedicated test database would also allow the page logic to be tested directly rather than only through the browser.
+The clearest gaps are the edit and delete flows, a real assertion on the contents of a downloaded CSV, and security-focused cases around authentication and file uploads. Setting up a dedicated test database would help most of all, because the page logic could then be tested directly instead of only through a browser.
 
 ### Comments with respect to the requirements' acceptance criteria
 
-The automated and manual tests were derived from the functional requirements and their acceptance criteria. Each requirement group has a matching entry in the acceptance checklist, so that a passing run corresponds directly to the behaviour promised in the Requirements section.
+Both the automated and the manual tests were written from the functional requirements and their acceptance criteria, not the other way round. Every requirement group has a matching entry in the acceptance checklist, so a passing run maps directly onto the behaviour promised in the Requirements chapter.
 
 ## Acceptance test
 
-Acceptance testing was carried out manually to confirm that the application meets its requirements from the user's point of view. The scenarios were taken directly from the user stories and functional requirements.
+Acceptance testing was done manually, to check the application from the user's point of view rather than the code's. Each scenario comes from a user story or a functional requirement.
 
 ### Test cases
 
@@ -89,4 +89,4 @@ Acceptance testing was carried out manually to confirm that the application meet
 
 ### Comments with respect to the requirements' acceptance criteria
 
-All acceptance tests confirmed that the application fulfils the key user requirements defined in the project documentation. Where the tests revealed weaker areas — notably in legacy authentication code — these are recorded honestly in the Self-evaluation and Future work sections rather than hidden.
+Every acceptance test confirmed that the application meets the user requirements set out earlier in this report. The tests also showed up weaker areas, above all the legacy authentication code, and those are written down in the Self-evaluation and Future work chapters rather than left out.

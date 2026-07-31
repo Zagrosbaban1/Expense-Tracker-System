@@ -8,27 +8,25 @@ nav_order: 9
 
 ## What is automated?
 
-The project uses a set of GitHub Actions workflows so that every change pushed to the repository is automatically checked, packaged, and — for the report — published, without any manual steps.
+The project uses four GitHub Actions workflows, so that a change pushed to the repository is checked, packaged and, in the case of the report, published without me doing anything by hand.
 
-1. **Syntax checking** — On every push and pull request to `main`, the project's PHP files are linted with `php -l` to catch parse errors before they can reach a running site.
+1. **Syntax checking**: when PHP files change on `main` or in a pull request against it, every `*.php` file outside `vendor/` is passed through `php -l`. A parse error therefore fails the run instead of reaching a running site.
 
-2. **Dependency validation** — A Composer workflow validates `composer.json`, restores a cached `vendor` folder, and installs the development dependencies (PHPUnit), confirming that the project's declared dependencies resolve cleanly.
+2. **Dependency validation**: when `composer.json`, `composer.lock`, or any PHP file changes, a Composer workflow runs `composer validate --strict`, restores a cached `vendor` folder, and installs the development dependencies (PHPUnit). This proves the declared dependencies still resolve.
 
-3. **Artifact packaging** — On every push to `main`, the application is copied into a clean release folder (excluding `.git`, `.github`, `node_modules`, and `vendor`), compressed into `expense-tracker.zip`, and uploaded as a build artifact that can be downloaded and deployed.
+3. **Artifact packaging**: when application files change on `main`, the project is copied into a clean release folder (excluding `.git`, `.github`, `node_modules`, and `vendor`), zipped into `expense-tracker.zip`, and uploaded as a build artifact that can be downloaded and deployed.
 
-4. **Report publishing** — On every push to `main`, the `report/` folder is built with Jekyll and deployed to GitHub Pages, so that the documentation the reader is viewing stays in step with the repository.
+4. **Report publishing**: when anything under `report/` changes on `main`, the folder is built with Jekyll and deployed to GitHub Pages, which is how the page you are reading stays in step with the repository.
+
+Each workflow is filtered by path, so a documentation-only commit does not trigger a PHP lint and a code-only commit does not rebuild the site. All four can also be started manually from the Actions tab.
 
 ## Why is this automated?
 
-Automation was introduced for several reasons:
-- *Consistency*: the same checks run the same way on every change, rather than depending on the author remembering to run them.
-- *Early feedback*: a broken PHP file or an invalid dependency file is reported immediately on push, while the change is still fresh.
-- *Repeatable releases*: the deployable package is produced by the pipeline rather than assembled by hand, which removes a source of mistakes.
-- *Always-current documentation*: the report site is rebuilt automatically, so the published version never drifts far from the source.
+I automated these steps for four reasons. The checks run identically on every change rather than depending on me remembering them. A broken PHP file or an invalid dependency file is reported soon after the push, while the change is still fresh in my head. The deployable package is produced by the pipeline instead of being assembled by hand, which takes out a manual step where mistakes are easy to make and hard to notice. And the published report is rebuilt from the source, so it cannot quietly fall behind the repository.
 
 ## GitHub Actions implementation
 
-The workflows are defined as YAML files in `.github/workflows/`. The main ones are described below.
+The workflows are YAML files in `.github/workflows/`.
 
 ### PHP syntax check (`main.yml`)
 
@@ -39,19 +37,19 @@ The workflows are defined as YAML files in `.github/workflows/`. The main ones a
 ### PHP Composer (`php.yml`)
 
 - **Checkout**: `actions/checkout` retrieves the repository.
-- **Validate**: `composer validate --strict` checks the project's dependency file.
-- **Cache and install**: `actions/cache` restores the `vendor` folder, and `composer install` installs the development dependencies.
+- **Validate**: `composer validate --strict` checks the dependency file.
+- **Cache and install**: `actions/cache` restores the `vendor` folder, then `composer install` installs the development dependencies.
 
 ### Build artifact (`artifact.yml`)
 
 - **Checkout**: the repository is checked out.
 - **Assemble**: the project is copied into a `release/` folder with development-only paths excluded.
-- **Package and upload**: the folder is zipped into `expense-tracker.zip` and uploaded with `actions/upload-artifact`, retained for a fixed number of days.
+- **Package and upload**: the folder is zipped into `expense-tracker.zip` and uploaded with `actions/upload-artifact`, kept for seven days.
 
 ### Deploy report site (`report-site.yml`)
 
 - **Checkout and configure Pages**: the repository is checked out and GitHub Pages is configured.
 - **Build with Jekyll**: `actions/jekyll-build-pages` builds the site from the `report/` folder.
-- **Deploy**: the built site is uploaded and published to GitHub Pages with `actions/deploy-pages`.
+- **Deploy**: the built site is uploaded and published with `actions/deploy-pages`.
 
-Together these workflows cover the parts of the lifecycle that benefit most from automation on a single-developer PHP project: catching errors, proving the dependencies resolve, producing a deployable package, and keeping the report online. The natural next step, noted in Future work, is to run the PHPUnit suite inside the pipeline so that the automated tests gate every change as well.
+Between them these four cover the parts of the lifecycle that gave the most trouble on a single-developer PHP project: catching errors, proving the dependencies resolve, producing a deployable package, and keeping the report online. The obvious gap is that the PHPUnit suite is not run in the pipeline yet. The step exists in `php.yml` but is still commented out, so a failing test would not currently block a change. Enabling it is the first item in Future work.

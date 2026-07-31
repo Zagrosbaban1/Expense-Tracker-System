@@ -6,7 +6,7 @@ nav_order: 11
 
 # Developer guide
 
-To contribute to or extend the Expense Tracker System, follow these steps to set up a development environment, run the application and its tests, and understand where the important code lives.
+This chapter is for someone who wants to extend the Expense Tracker System or contribute to it. It covers setting up a development environment, running the application and its tests, and finding the code that matters.
 
 ## Setting up the development environment
 
@@ -38,18 +38,18 @@ Note that several tables and columns are also created automatically at runtime b
 
 ## Project structure
 
-- `includes/` — the shared connection (`dbconnection.php`), the helper libraries (`expense-helpers.php`, `report-helpers.php`), and the common layout partials (`header.php`, `sidebar.php`, `footer.php`).
-- Root `*.php` files — the application pages, such as `dashboard.php`, `add-expense.php`, `manage-expense.php`, `manage-categories.php`, `manage-recurring.php`, the report pages, and the authentication pages.
-- `uploads/receipts/` — stored receipt files.
-- `css/`, `js/`, `assets/`, `fonts/` — frontend resources.
-- `tests/` — the unit tests (`tests/unit/`), the browser end-to-end test (`tests/e2e/`), and the manual acceptance checklist.
-- `report/` — the Jekyll source for this report site.
+- `includes/` holds the shared connection (`dbconnection.php`), the helper libraries (`expense-helpers.php`, `report-helpers.php`), and the layout partials (`header.php`, `sidebar.php`, `footer.php`).
+- The root `*.php` files are the application pages: `dashboard.php`, `add-expense.php`, `manage-expense.php`, `manage-categories.php`, `manage-recurring.php`, the report pages, and the authentication pages.
+- `uploads/receipts/` stores uploaded receipt files.
+- `css/`, `js/`, `assets/`, and `fonts/` hold the frontend resources.
+- `tests/` contains the unit tests (`tests/unit/`), the browser end-to-end test (`tests/e2e/`), and the manual acceptance checklist.
+- `report/` is the Jekyll source for this report site.
 
-The most important place to look first is `includes/expense-helpers.php`, since it centralises the reusable logic (validation, formatting, prepared statements, CSRF handling, budgeting, and recurring processing) that the newer pages depend on.
+Start with `includes/expense-helpers.php`. Almost everything reusable is in there (validation, formatting, prepared statements, CSRF handling, budgeting, and recurring processing), and the newer pages are written around it, so reading it first makes them much easier to follow.
 
 ## Building and running the application
 
-There is no compile step: once the files are in `htdocs` and the database exists, open `http://localhost/Expense-Tracker-System/` in a browser. Install the development dependencies with Composer so that the test tools are available:
+There is no build step. Once the files are in `htdocs` and the database exists, open `http://localhost/Expense-Tracker-System/` in a browser. Install the development dependencies with Composer so the test tools are available:
 
 ```bash
 composer install
@@ -57,9 +57,9 @@ composer install
 
 ## Testing
 
-The project includes automated unit tests and an optional browser end-to-end test.
+The project has automated unit tests and an optional browser end-to-end test.
 
-Run the PHPUnit unit and syntax tests:
+Run the PHPUnit unit and syntax tests, which should report `OK (44 tests, 57 assertions)`:
 
 ```bash
 composer test
@@ -73,7 +73,7 @@ python -m playwright install chromium
 python tests/e2e/playwright_smoke.py
 ```
 
-Developers are encouraged to add tests when changing behaviour, and to keep new database access on prepared statements through the existing helpers.
+If you change behaviour, add a test for it, and route any new database access through the existing prepared-statement helpers rather than writing a query inline.
 
 ## Contributing to the project
 
@@ -83,4 +83,4 @@ To contribute:
 - Commit using the Conventional Commits style: `git commit -m "feat: add pagination to expense list"`
 - Push the branch and open a pull request: `git push origin feat/your-change`
 
-Please keep changes small and focused, reuse the shared helpers rather than duplicating logic, and make sure `composer test` passes before opening a pull request.
+Keep changes small and focused, reuse the shared helpers instead of duplicating logic, and check that `composer test` passes before opening the pull request.

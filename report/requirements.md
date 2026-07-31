@@ -6,6 +6,8 @@ nav_order: 3
 
 # Requirements
 
+The requirements start from what a person actually needs at each step of tracking their spending. The user stories come first, the functional requirements follow from them, and each requirement is written with acceptance criteria concrete enough to be tested rather than argued about.
+
 ## User stories
 
 1. As a budget-minded user, I want to record small daily expenses quickly, so that I can make my money last the whole month.
@@ -82,7 +84,7 @@ nav_order: 3
 
 - User data must be kept private and reasonably secure.
     * Protected pages are accessible only within an authenticated session.
-    * User-supplied input is escaped on output, and newer database access uses prepared statements and CSRF tokens.
+    * User-supplied input is escaped on output, and newer database access uses prepared statements and CSRF tokens. The older authentication pages do not yet meet this criterion, which is recorded in the Self-evaluation.
 
 - The application must be portable.
     * The project runs on a standard XAMPP environment (Apache, MySQL/MariaDB, PHP) without additional server software.

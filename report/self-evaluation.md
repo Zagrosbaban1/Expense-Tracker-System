@@ -6,22 +6,22 @@ nav_order: 12
 
 # Self-evaluation
 
-I created this project and was responsible for every stage of the process, from the database design and the application code to the testing, the automation, and this report.
+I worked on this project alone and was responsible for all of it: the database design, the application code, the tests, the automation, and this report.
 
 ## Strengths
 
-- **A complete, working product**: the application delivers the full expense-tracking workflow, from account creation and daily entry through to budgeting, recurring payments, dashboards, and reports. The core features all reach their intended goal.
-- **More than basic CRUD**: the project goes well beyond simple record-keeping by adding categories, per-category monthly budgets with progress indicators, recurring-expense automation, receipt uploads, multi-currency support, CSV export, and printable reports.
-- **Movement toward good engineering practice**: newer pages are built on a shared helper layer that provides prepared statements, output escaping, and CSRF tokens, which reduced duplication and improved safety compared with the original code.
-- **A genuine testing and automation setup**: the project has a passing PHPUnit suite, a browser end-to-end test, and GitHub Actions workflows for linting, dependency validation, packaging, and report publishing.
-- **Experience gained**: building the whole system gave me practical experience across database design, PHP development, security concerns, testing, and CI/CD, and strengthened my understanding of how these parts fit together.
+- **It is finished and it works.** The application covers the whole expense-tracking workflow, from creating an account and entering a purchase through to budgeting, recurring payments, dashboards, and reports. Every core feature does what it was specified to do.
+- **It goes past basic CRUD.** Categories, per-category monthly budgets with progress indicators, automatic recurring expenses, receipt uploads, multiple currencies, CSV export, and printable reports were all added on top of the record-keeping.
+- **The engineering improved as it went.** The newer pages sit on a shared helper layer with prepared statements, output escaping, and CSRF tokens. Comparing them with the original code is the clearest evidence of what I learned during the project.
+- **The testing and automation are real.** There is a passing PHPUnit suite of 44 tests, a Playwright end-to-end test that drives the live site, and GitHub Actions workflows for linting, dependency validation, packaging, and report publishing.
+- **I understand the whole stack now.** Building every layer myself, rather than one part of a larger system, is what tied database design, PHP, security, testing, and CI/CD together for me.
 
 ## Weaknesses
 
-- **Inconsistent security across the codebase**: the newer pages use prepared statements and CSRF protection, but some older pages — including parts of the authentication flow — still use direct SQL and MD5 password hashing, which is not acceptable for a real deployment.
-- **Uneven test depth**: coverage is good for the helper functions and the main browser flow, but individual page logic is only tested indirectly, and edit/delete and CSV-download paths are not yet asserted automatically.
-- **Informal schema evolution**: the database is extended at runtime by helper code rather than through a proper migration system, which is convenient locally but makes the schema history harder to track.
-- **Still largely procedural**: the architecture is modular and layered in intent, but the pages remain file-based procedural PHP rather than a formal framework, which limits how far the separation of concerns can be enforced.
-- **No external code review**: the project would have benefited from a second pair of eyes, since automated checks catch syntax and regressions but not design or usability concerns.
+- **Security is inconsistent.** The newer pages use prepared statements and CSRF protection, but parts of the authentication flow still use direct SQL and MD5 password hashing. MD5 is not acceptable for storing passwords, and I would not deploy this publicly in its current state.
+- **The tests are uneven.** The helper functions and the main browser flow are well covered; the logic inside individual pages is only tested indirectly, and the edit, delete, and CSV-download paths have no automatic assertions.
+- **Schema evolution is informal.** Extending the database from helper code at runtime was convenient while I was the only user, but it leaves no migration history and makes the true state of the schema harder to see.
+- **It is still procedural.** The architecture is layered in intent, but the pages are file-based procedural PHP rather than a framework, which limits how strictly the separation of concerns can actually be enforced.
+- **Nobody else reviewed it.** Working alone meant the automated checks caught syntax problems and regressions, but no one questioned a design decision or told me a page was confusing to use.
 
-Overall I am satisfied that the project achieves its aims and demonstrates a realistic progression from a basic application toward more maintainable and better-tested software, while being honest about the legacy areas that a further iteration should address first.
+Looking back, the project does what I set out to do and shows a genuine progression from a basic application towards something more maintainable and better tested. The legacy authentication code is the part I am least happy with, and it is where a second iteration should start.

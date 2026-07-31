@@ -8,25 +8,25 @@ nav_order: 5
 
 ## Distributed Version Control System (DVCS)
 
-For the version control of this project, **Git** was used together with **GitHub** as the remote host. The development process was kept simple, with work carried out mainly on the `main` branch and supporting branches used for the report site. New features, fixes, and documentation were committed as small, focused changes.
+I used **Git** for version control, with **GitHub** as the remote. The workflow was deliberately simple: most work happened on `main`, with supporting branches used for the report site. Features, fixes, and documentation went in as small commits rather than large ones, which made it much easier to go back and find where something broke.
 
-To keep the project history readable, commit messages follow the Conventional Commits format `<type>: <subject>`, where the type is one of `feat`, `fix`, `docs`, `test`, `style`, or `chore`, and the subject is a short description of the change. This makes it easy to scan the history and to see at a glance whether a commit added a feature, fixed a bug, or updated the documentation.
+Commit messages follow the Conventional Commits format `<type>: <subject>`, where the type is one of `feat`, `fix`, `docs`, `test`, `style`, or `chore`. Reading `git log --oneline` then tells you at a glance whether a commit added a feature, fixed a bug, or only touched the documentation.
 
 ## Implementation details
 
-The project began as a straightforward procedural PHP application in which SQL, HTML, and business logic were mixed together in each page. As the feature set grew, the biggest engineering effort went into gradually pulling shared logic out of the pages and into reusable helpers, without breaking the parts that already worked.
+The project started as a plain procedural PHP application, with SQL, HTML, and business logic all mixed together in the same file. That was quick to write and became difficult to change. As the feature set grew, most of the engineering effort went into pulling the shared logic out of the pages and into reusable helpers, without breaking what already worked.
 
-The helper file `includes/expense-helpers.php` became the centre of this refactoring. It now provides the reusable building blocks used across the newer pages:
+`includes/expense-helpers.php` is where that refactoring ended up. It now holds the building blocks the newer pages are written against:
 
-- currency handling — the list of supported currencies, the mapping to display symbols (for example `€` and `£`), and money formatting;
-- output escaping — a single function that escapes user data before it is printed, to guard against HTML injection;
-- safe database access — a wrapper that prepares and executes parameterised statements and helpers that fetch rows as associative arrays;
-- CSRF protection — token generation and verification for form submissions;
-- schema maintenance — `expense_ensure_schema`, which checks for and creates the columns and tables that newer features need;
-- domain logic — category defaults, budget-progress calculation, and the recurring-expense processing that turns due rules into real expenses.
+- currency handling: the list of supported currencies, the mapping to display symbols such as `€` and `£`, and money formatting;
+- output escaping: one function that escapes user data before it is printed, which closes off HTML injection;
+- safe database access: a wrapper that prepares and executes parameterised statements, plus helpers that return rows as associative arrays;
+- CSRF protection: token generation and verification for form submissions;
+- schema maintenance: `expense_ensure_schema`, which creates the columns and tables that newer features expect;
+- domain logic: category defaults, budget-progress calculation, and the recurring-expense processing.
 
-One recurring challenge (`expense_process_recurring`) was making the recurring-payment feature behave correctly when the application had not been opened for a while. The logic advances a rule's next run date in a loop, generating one expense for each period that has passed, so that a monthly bill that became due several times still produces the right number of records rather than a single one.
+The hardest part to get right was `expense_process_recurring`, and specifically what should happen when the application has not been opened for a while. Comparing the next run date against today and inserting one expense is not enough: a monthly bill that fell due three times would produce a single record. The working version advances the rule's next run date in a loop and generates one expense for every period that has passed, so nothing is silently lost.
 
-Another consideration was that the project needed to keep running on existing databases that were created before some columns existed. Rather than requiring a manual database rebuild, the runtime schema helper adds any missing columns and tables the first time a relevant page is opened. This kept local upgrades painless, at the cost of not having a formal migration history — a trade-off discussed in the Self-evaluation section.
+The second problem was that new columns kept being added while databases created under the older schema were still in use. Rather than requiring a manual rebuild, the schema helper adds any missing columns and tables the first time a relevant page is opened. That made local upgrades painless, at the cost of leaving the project with no migration history, and it is not a choice I would repeat on a system with more than one deployment. The trade-off comes up again in the Self-evaluation.
 
-In the end the application reached its goals: the core expense workflow is complete, and it is surrounded by categories, budgets, recurring payments, receipts, multi-currency support, dashboards, and reports. There is still room to move the remaining legacy pages onto the same helper-based foundation, but that work goes beyond the scope of this project.
+By the end, the core expense workflow was complete and surrounded by categories, budgets, recurring payments, receipts, multi-currency support, dashboards, and reports. What is still outstanding is moving the remaining legacy pages, mostly the authentication ones, onto the same helper-based foundation.
