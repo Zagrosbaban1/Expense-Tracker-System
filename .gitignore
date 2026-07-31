@@ -1,3 +1,7 @@
 vendor/
 .phpunit.cache/
 tests/e2e/artifacts/
+
+# Local working clone of the separate report repository, kept out of this
+# repository so that the report is not duplicated here.
+.tmp-reportrepo-sync/

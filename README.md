@@ -17,8 +17,18 @@ Expense Tracker System is a PHP and MySQL web application for recording personal
 - `includes/` contains database connection, layout includes, and shared helper functions.
 - `css/`, `js/`, `assets/`, and `fonts/` contain frontend resources.
 - `uploads/receipts/` stores uploaded receipt files.
-- `report/` contains the software engineering report site.
+- `tests/` contains the unit tests, the browser end-to-end test, and the acceptance checklist.
 - `.github/workflows/` contains CI/CD workflow definitions.
+
+## Report
+
+The software engineering report is maintained in a separate repository and published at
+<https://unibo-dtm-se-2324-ets.github.io/report/>. It is deliberately not kept in this
+repository, so that there is only one copy of the document.
+
+Parts of this project were produced with the help of an AI coding assistant. The commits
+concerned carry a `Co-Authored-By: Claude` trailer, and the scope of that assistance is
+declared on the home page of the report.
 
 ## Local Deployment
 
@@ -33,8 +43,8 @@ Expense Tracker System is a PHP and MySQL web application for recording personal
 ## Build And Checks
 
 - PHP syntax check workflow: `.github/workflows/main.yml`
+- Composer dependency workflow: `.github/workflows/php.yml`
 - Release artifact workflow: `.github/workflows/artifact.yml`
-- Report site deployment workflow: `.github/workflows/report-site.yml`
 
 Locally, selected syntax checks can be run with:
 

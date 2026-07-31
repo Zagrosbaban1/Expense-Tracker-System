@@ -12,7 +12,7 @@ APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost/Expense-Tracker-Syste
 RUN_REPORT_CHECK = os.getenv("RUN_REPORT_CHECK", "0") == "1"
 REPORT_BASE_URL = os.getenv(
     "REPORT_BASE_URL",
-    "https://zagrosbaban1.github.io/Expense-Tracker-System/report/",
+    "https://unibo-dtm-se-2324-ets.github.io/report/",
 )
 
 
